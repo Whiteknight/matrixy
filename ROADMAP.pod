@@ -1,0 +1,106 @@
+=head1 ROADMAP
+
+=head2 INTRODUCTION
+
+There is a long way to go between the current implementation
+and a final robust one. The final version should be able to
+emulate the vast majority of MATLAB/Octave language syntax,
+and should also try to emulate some of the basic library
+functions thereof. Notice that some "standard" features of
+MATLAB/Octave won't be available here, at least not
+immediately: Plots and graphs, user interfaces, toolboxes,
+etc.
+
+=head2 Future Versions
+
+Version 1.0 will support most of the basic language syntax,
+and hopefully many of the core library functions. Here,
+abbreviated and horribly inaccurate, is a general roadmap
+for this project:
+
+Version 0.1: (current) We have basic support for single-
+value subroutines, basic control structures, basic scalar 
+variables. Also some ideosyncratic features like using ';'
+to suppress printing line results, using '!' to make a
+system call, etc. Implemented basic functions like 'disp',
+'error', 'exit', and 'feval', all for scalar arguments only.
+
+Version 0.2: Implement matrices, and improved support for
+functions with multiple return values.
+
+Version 0.3: Write some of the standard matrix manipulation
+functions, or basic versions thereof. Transpose, determinant,
+size, addition, multiplication, etc.
+
+Version 0.4: Implement function/file look-up. Searching for
+function "foo", look in file "foo.m", etc.
+
+Version 0.5: Implement cell arrays
+
+Version 0.6: Write more-advanced function features: nargin,
+nargout, varargin, varargout, return. Implement matrix-
+ready functions that iterate over matrix values
+
+Version 0.7: Implement matrix and cell array slicing:
+'x(1:)', and similar. implement matrix and cell array 
+concatination '[[1 2 3], [4 5 6]] = [1 2 3 4 5 6]'. Treat
+all scalars as matrices.
+
+Version 0.8: Implement basic MATLAB classes and data
+structures. Implement a dedicated matrix PMC (probably in C)
+implement sparse matrices (may be part of the same pmc).
+
+Version 0.9: Implement most of the standard library of
+functions, including error-stubs for common functions which
+cannot be implemented (graphics, etc). Core builtins should be
+written in PIR, and the rest should be written in M.
+
+Version 1.0: All the basic stuff should be working, including
+a proper test suite. Enough of the language should be implemented
+in order to run the Octave test suite (or portions of it that
+we haven't explicitly excluded). Matrixy won't have all the
+features of MATLAB or Octave, but the features it does have
+should match them syntactically. Everything should be documented
+
+=head2 Wishlist
+
+The roadmap above should produce a 1.0 which is a stable clone
+of a core subset of MATLAB/Octave. From that base, there are a
+large number of standard features (extensions/libraries, larger
+subsets of the language) that could be implemented. Plus, there
+are a number of non-standard wishlist features that could be added
+to extend the language. Such non-standard features might be made
+available through a command-line switch, an in-code pragma or in
+a separate executable. Here is a list of such features, in no
+particular order:
+
+=over 4
+
+=item* Better, more robust support for OO, classes, namespaces.
+
+Notice that OO was added to MATLAB in R2008A. This wishlist item
+means better support for this including some of the more advanced
+features that Parrot enables.
+
+=item* Better Multithreading
+
+Notice that MATLAB supplies a Parallel Computing Toolbox which gives
+the user some explicit support for multithreading and support for
+multicore computing. Matrixy may attempt to reproduce this toolbox
+or may attempt to add a more generic threading system.
+
+=item* disambiguous matrix/function syntax.
+
+Should be able to use '[]' for matrix indices, use '()' for function
+arguments, if desired. This will help ease human readability in some
+cases, and is more natural for some programmers.
+
+=item* Allow inlining code from other languages.
+
+Matrixy will likely contain subroutines very early on to compile code
+strings from other programming languages. An inlineable interface will
+be more robust and natural.
+
+=back
+
+=end

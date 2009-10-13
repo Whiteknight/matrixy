@@ -1,0 +1,12 @@
+Index: compilers/pct/src/PAST/Compiler.pir
+===================================================================
+--- compilers/pct/src/PAST/Compiler.pir	(revision 37388)
++++ compilers/pct/src/PAST/Compiler.pir	(working copy)
+@@ -90,6 +90,7 @@
+     valflags['String']   = 's~*:e'
+     valflags['Integer']  = 'i+*:'
+     valflags['Float']    = 'n+*:'
++    valflags['Complex']   = 's~*:e'
+     set_global '%valflags', valflags
+ 
+     ##  %!controltypes holds the list of exception types for each

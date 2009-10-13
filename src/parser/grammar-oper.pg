@@ -1,0 +1,34 @@
+# TODO: Make sure this list covers all the important M operators, and does not
+#       introduce any new weird operators that M does not support.
+
+proto 'infix:or'       is precedence('1')     is pasttype('unless') { ... }
+proto 'infix:and'      is tighter('infix:or') is pasttype('if')     { ... }
+
+proto 'infix:<'        is tighter('infix:and')                      { ... }
+proto 'infix:<='       is equiv('infix:<')                          { ... }
+proto 'infix:>'        is equiv('infix:<')                          { ... }
+proto 'infix:>='       is equiv('infix:<')                          { ... }
+proto 'infix:=='       is equiv('infix:<')                          { ... }
+proto 'infix:!='       is equiv('infix:<')                          { ... }
+
+proto 'infix:+'        is tighter('infix:<')                        { ... }
+proto 'infix:-'        is equiv('infix:+')                          { ... }
+
+proto 'infix:*'        is tighter('infix:+')                        { ... }
+proto 'infix:^'        is tighter('infix:*')                        { ... }
+proto 'infix:%'        is equiv('infix:*')      is pirop('mod')     { ... }
+proto 'infix:/'        is equiv('infix:*')                          { ... }
+
+proto 'infix:.*'       is equiv('infix:*')                          { ... }
+proto 'infix:./'       is equiv('infix:/')                          { ... }
+proto 'infix:.^'       is equiv('infix:^')                          { ... }
+proto "postfix:'"      is tighter('infix:*')                        { ... }
+proto "postfix:.'"     is equiv("postfix:'")                        { ... }
+
+# TODO: how do we get this operator to work?
+#proto 'infix:.\\'      is equiv('infix:/')                          { ... }
+
+proto 'prefix:not'     is tighter('infix:*')    is pirop('not')     { ... }
+proto 'prefix:-'       is tighter('prefix:not')                     { ... }
+
+proto 'term:'          is tighter('prefix:-')    is parsed(&term)   { ... }

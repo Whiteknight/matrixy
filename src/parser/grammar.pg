@@ -1,0 +1,359 @@
+# $Id$
+
+=begin overview
+
+This is the grammar for Matrixy written as a sequence of Perl 6 rules.
+
+=end overview
+
+grammar Matrixy::Grammar is PCT::Grammar;
+
+rule TOP {
+    {*}                                      #= open
+    \s*
+    <stat_or_def>*
+    [ $ || <.panic: 'Syntax error'> ]
+    {*}                                      #= close
+}
+
+################################################################################
+# STATEMENTS AND BLOCKS
+################################################################################
+
+rule block {
+    {*}                                      #= open
+    <statement>*
+    {*}                                      #= close
+}
+
+rule statement_list {
+    <statement>* {*}
+}
+
+rule stat_or_def {
+    | <statement> {*}                         #= statement
+    | <func_def> {*}                         #= func_def
+}
+
+rule statement {
+    | <control_statement> {*}                #= control_statement
+    | <global_statement> <terminator> {*}    #= global_statement
+    | <stmt_with_value> {*}                  #= stmt_with_value
+    | <system_call> {*}                      #= system_call
+}
+
+# Statement types that would display a value if not terminated with an ';'
+rule stmt_with_value {
+    | <assignment> <terminator> {*}          #= assignment
+    | <expression> <terminator> {*}          #= expression
+}
+
+token terminator {
+    [ ';' \s* | \n \s* | $ ]
+    {*}
+}
+
+# Since the <ws> rule doesn't allow newlines, we have to have this rule for
+# places where a newline might need to be treated as simple whitespace
+token maybenewline {
+    \n*
+}
+
+rule system_call {
+    '!' <sys_bare_words> {*}
+}
+
+token sys_bare_words {
+    \N+ \n?
+}
+
+rule assignment {
+    {*} #= open
+    <variable>
+    <lvalue_postfix_index>*
+    '=' <expression>
+    {*} #= close
+}
+
+rule lvalue_postfix_index {
+    | '.' <identifier> {*}                           #= identifier
+    | '(' <expression> [ ',' <expression> ]* ')' {*} #= expressions
+}
+
+################################################################################
+# FUNCTIONS AND VARIABLES
+################################################################################
+# TODO: A bare identifier should be treated as a function call UNLESS it's
+#       a previously-defined variable in the current scope. At the moment, we
+#       do not do this.
+rule sub_or_var {
+    | <primary>
+      '(' [ <expression> [',' <expression>]* ]? ')'
+      {*}                                    #= args
+    #| <primary> <bare_words> {*}
+    | <primary> {*}                         #= noargs
+}
+
+# TODO: This should match everything upto but not including a terminator token
+token bare_words {
+    \N* {*}
+}
+
+# TODO: Do this right! Add allow a comma-separated list and an autovivification
+#       option
+rule global_statement {
+    'global' <identifier> {*}
+}
+
+# An ambiguous primary element, could be a subroutine call or a variable
+# reference, depending on context
+rule primary {
+    <identifier> <postfix_expression>*
+    {*}
+}
+
+# An unambiguous variable reference, based on context
+rule variable {
+    <identifier> <postfix_expression>*
+    {*}
+}
+
+rule postfix_expression {
+    | <key> {*}                      #= key
+    | <index> {*}                    #= index
+}
+
+rule key {
+    '{' <expression> '}'
+    {*}
+}
+
+# TODO: This isn't really valid M syntax. We're keeping this as a "feature"
+#       to help disambiguate variable and subroutine calls.
+rule index {
+    '[' <expression> ']'
+    {*}
+}
+
+# This rule is used in places like ranges where using <expression> would cause
+# left recursion in the parser, or where not all the options in <expression>
+# are legal. This only handles numerical options
+rule subexpression {
+   | <float_constant> {*}            #= float_constant
+   | <integer_constant> {*}          #= integer_constant
+   | <sub_or_var> {*}                #= sub_or_var
+   | '(' <expression> ')' {*}        #= expression
+}
+
+rule term {
+   | <range_constructor> {*}         #= range_constructor
+   | <complex_constant> {*}          #= complex_constant
+   | <float_constant> {*}            #= float_constant
+   | <integer_constant> {*}          #= integer_constant
+   | <string_constant> {*}           #= string_constant
+   | <hash_constructor> {*}          #= hash_constructor
+   | <array_constructor> {*}         #= array_constructor
+   | <function_handle> {*}           #= function_handle
+   | <anon_func_constructor> {*}     #= anon_func_constructor
+   | <sub_or_var> {*}                #= sub_or_var
+   | '(' <expression> ')' {*}        #= expression
+}
+
+rule function_handle {
+    '@' <identifier> {*}
+}
+
+
+################################################################################
+# CONTROL STATEMENTS
+################################################################################
+
+# TODO: Make sure we support all these forms, and weed out any statement
+#       types that aren't in M
+rule control_statement {
+    | <if_statement> {*}                     #= if_statement
+    | <while_statement> {*}                  #= while_statement
+    | <for_statement> {*}                    #= for_statement
+    | <try_statement> {*}                    #= try_statement
+    | <do_block> {*}                         #= do_block
+    | <return_statement> <terminator> {*}    #= return_statement
+}
+
+rule if_statement {
+    'if' <expression> <maybenewline>
+    <statement_list>
+    ['else' <maybenewline> <else=statement_list>]?
+    ['endif'|'end']>> <maybenewline>
+    {*}
+}
+
+rule while_statement {
+    'while' <expression> ','? <maybenewline> <statement_list>
+    ['endwhile'|'end']>>
+    {*}
+}
+
+rule for_statement {
+    'for' <identifier> '=' <array_or_range> <maybenewline>
+    <statement_list>
+    ['endfor'|'end']>> <maybenewline>
+    {*}
+}
+
+rule array_or_range {
+    | <primary> {*}             #= primary
+    | <array_constructor> {*}   #= array_constructor
+    | <range_constructor> {*}   #= range_constructor
+}
+
+# both Octave and Matlab support try/catch
+# see http://www.network-theory.co.uk/docs/octave3/octave_96.html
+rule try_statement {
+    'try' <maybenewline> <try=statement_list>
+    'catch' <maybenewline> <catch=statement_list>
+    ['end_try_catch'|'end']>> <maybenewline>
+    {*}
+}
+
+# TODO: In M, return statements don't take an expression, because the return
+#       values are specified in the function definition. Update this.
+rule return_statement {
+    'return' <expression>
+    {*}
+}
+
+# TODO: Does M have a do-block? If not, delete this.
+rule do_block {
+    'do' <block> 'end'
+    {*}
+}
+
+################################################################################
+# FUNCTION DEFINITIONS
+################################################################################
+
+# note: the order of endfunction|end are important here!
+#
+rule func_def {
+    <func_sig> <maybenewline>
+    <statement>*
+    ['endfunction'|'end']>> <maybenewline>
+    {*}
+}
+
+rule func_sig {
+    'function' [<return_identifier> '=']? <identifier>
+        ['(' [ <identifier> [',' <identifier>]* ]? ')']?
+    {*}
+}
+
+# TODO: Expand this to allow mulitple return values in a () comma-separated
+#       list.
+token return_identifier {
+    <!keyword> <ident>
+    {*}
+}
+
+################################################################################
+# CONSTRUCTORS AND CONSTANTS
+################################################################################
+
+rule anon_func_constructor {
+    '@' '(' [ <identifier> [',' <identifier>]* ]? ')'
+    <expression>
+    {*}
+}
+
+# TODO: Does M have things like this, or not? Do we want to keep hashes as a
+#       feature?
+rule hash_constructor {
+    '{' [ <named_field> [',' <named_field>]* ]? '}'
+    {*}
+}
+
+rule named_field {
+    <string_constant> '=>' <expression>
+    {*}
+}
+
+# TODO: Should probably be renamed "matrix_constructor", but that's nitpickery
+rule array_constructor {
+    '[' [ <array_row> [<terminator> <array_row>]* ]? ']'
+    {*}
+}
+
+rule array_row {
+    <expression> [','? <expression>]*
+    {*}
+}
+
+rule range_constructor {
+      <subexpression> ':' <subexpression> ':' <subexpression> {*}    #= three
+    | <subexpression> ':' <subexpression> {*}                        #= two
+}
+
+token identifier {
+    <!keyword> <ident>
+    {*}
+}
+
+token integer_constant {
+    \d+
+    {*}
+}
+
+token float_constant {
+    [
+    | \d+ '.' \d*
+    | \d* '.' \d+
+    ]
+    {*}
+}
+
+
+# TODO: still need to add support for capital I and J
+token complex_constant {
+    [
+        | \d+ '.' \d*
+        | \d* '.' \d+
+        | \d+
+    ]
+    ['i' | 'j' ]
+    {*}
+}
+
+# M supports 'single-quote' string literals in Matlab, Octave also supports "double-quote".
+#
+token string_constant {
+    [\" <string_literal: '"'> \" | \' <string_literal: '\''> \']
+    {*}
+}
+
+
+# TODO: We should be able to get rid of this and all calls to <!keyword>
+#       once PCT implements Longest-token-matching
+token keyword {
+    ['function'|'endfunction'|'return'
+    |'global'|'persistent'
+    |'if'|'elseif'|'else'|'endif'
+    |'and'|'not'|'or'
+    |'try'|'catch'|'throw'|'end_try_catch'
+    |'do'|'until'
+    |'while'|'endwhile'
+    |'for'|'endfor'
+    |'break'|'continue'
+    |'switch'|'case'|'otherwise'|'endswitch'
+    |'end']>>
+}
+
+rule expression is optable { ... }
+
+# Whitespace in M. Space, Tab, comments, and an ellipses followed by a newline
+token ws {
+    [ ' '
+        | \t
+        | '#' \N* \s+
+        | '%' \N* \s+
+        | '...' \s*
+    ]*
+}

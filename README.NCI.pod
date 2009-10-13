@@ -1,0 +1,80 @@
+=head1 DESCRIPTION
+
+Parrot must be recompiled with signatures produced in files in extern/pir/*.nci. These
+need to be appended to <parrot source>\config\gen\call_list, then Parrot needs to be 
+recompiled.
+
+The relevant dynamic library for a platform must be dropped into extern/lib/. The Windows
+DLLs should be already there and one version for Linux (libc.so.6).
+
+=head1 BUILD INSTRUCTIONS
+
+=head2 WINDOWS
+
+Either download the specific static library from 
+
+http://www.netlib.org/clapack/LIB_WINDOWS/prebuilt_libraries_windows.html
+
+or build them yourself using the VS solution provided at
+
+http://www.netlib.org/clapack/
+
+Then run
+
+./tools/nci/lib_to_dll.pl --libdir "C:\CLAPACK-3.1.1-VisualStudio\LIB\Win32" --name clapack
+                    --olib libf2c.lib --olib BLAS.lib --outdir "extern\lib"
+
+./tools/nci/lib_to_dll.pl --libdir "C:\CLAPACK-3.1.1-VisualStudio\LIB\Win32" --name cblas
+                    --olib libf2c.lib --outdir "extern\lib"
+                    
+=head2 LINUX
+
+Download clapack.tgz from 
+
+http://www.netlib.org/clapack/
+
+and unpack somewhere on your filesystem. 
+
+tar zxvf clapack.tgz
+cd CLAPACK-3.1.1.1
+copy make.inc.example make.inc
+
+Edit make.inc, add -fPIC option to NOOPT, i.e.
+
+NOOPT     = -O0 -fPIC
+
+and add the following lines to the end: -
+
+BLASLIBSO = ../../cblas.so
+LAPACKLIBSO = clapack.so
+
+Edit SRC/Makefile and add the following lines: -
+
+../$(LAPACKLIBSO): $(ALLOBJ) ../F2CLIBS/libf2c.a ../blas_LINUX.a
+        $(LOADER) $(LOADOPTS) -shared -Wl,-soname,clapack.so -o $@ $(ALLOBJ) ../F2CLIBS/libf2c.a ../blas_LINUX.a
+
+Also, change
+
+all: ../$(LAPACKLIB)
+
+to
+
+all: ../$(LAPACKLIB) ../$(LAPACKLIBSO)
+
+        
+Edit BLAS/SRC/Makefile and add the following lines: -
+
+$(BLASLIBSO): $(ALLOBJ) ../../F2CLIBS/libf2c.a
+        $(LOADER) $(LOADOPTS) -z muldefs -shared -Wl,-soname,cblas.so -o $@ $(ALLOBJ) ../../F2CLIBS/libf2c.a
+
+Also, change
+ 
+all: $(BLASLIB)
+
+to
+ 
+all: $(BLASLIB) $(BLASLIBSO)
+
+Finally run make and copy the cblas.so and clapack.so files to extern/lib/.
+
+=cut

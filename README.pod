@@ -1,0 +1,73 @@
+=head1 Matrixy
+
+=head2 INTRODUCTION
+
+This is a port of the MATLAB/Octave programming language to
+Parrot. See the ROADMAP file for more information on the
+status of this project, and what else needs to be done.
+
+=head2 ABOUT
+
+Primary goals are:
+
+=over 4
+
+=item* Create a working compiler that understands the
+majority of the MATLAB/Octave programming language.
+
+=item* Create a series of PMCs and library files, especially
+those involving matrices, that can be used by other
+programming languages which target Parrot.
+
+=back
+
+=head2 IMPLEMENTATION
+
+This project is broken into three primary components:
+
+=over 4
+
+=item* The first is the parser, located in the
+C<src/parser/> directory. The parser is composed of two
+source files, F<grammar.pg> which is a Perl6Grammar file,
+and F<actions.pm> which is the associated actions file
+written in NQP.
+
+=item* The second component is the library of builtin
+functions in the C<src/builtins/> directory. These
+functions are, currently, written primarily in PIR.
+Function names prefixed with an underscore are "private"
+functions for use with the parser. Other functions should
+have names which are the same as names for regular MATLAB
+or Octave functions, since they will be available to the
+HLL.
+
+=item* the final component is the set of various PMC classes
+that make up the data objects in Matrixy. The "master" super
+class is the "MatrixyData" class. This class represents an
+instantiation of a generic data object. From here, data can
+be subclassed into "Matrix", "Cell Array", or other types
+of values, as necessary.
+
+=back
+
+=head2 BUILDING
+
+    perl Configure.pl
+    nmake test
+
+=head2 TODO
+
+    * Parser
+    * Standard Builtins
+    * Test against Octave Test Suite.
+
+=head2 BUGS
+
+Lots!
+
+=head2 CONTACT
+
+Contact Project Owners at http://code.google.com/p/matrixy/.
+
+=end
