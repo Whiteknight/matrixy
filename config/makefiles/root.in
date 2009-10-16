@@ -1,10 +1,12 @@
-## $Id$
-
 ## arguments we want to run parrot with
 PARROT_ARGS = 
 
 ## configuration settings
-BUILD_DIR     = @build_dir@
+INCLUDE_DIR   := @includedir@@versiondir@
+LIB_DIR       := @libdir@@versiondir@
+SRC_DIR       := @srcdir@@versiondir@
+TOOLS_DIR     := @libdir@@versiondir@/tools/lib
+
 LOAD_EXT      = @load_ext@
 O             = @o@
 
@@ -13,38 +15,29 @@ PERL          = @perl@
 RM_F          = @rm_f@
 CP            = @cp@
 CAT           = @cat@
-PARROT        = ../../parrot@exe@
-BUILD_DYNPMC  = $(PERL) $(BUILD_DIR)/tools/build/dynpmc.pl
-#IF(darwin):
+PARROT        = @bindir@/parrot@exe@
+NQP           = @bindir@/parrot_nqp@exe@
+
 #IF(darwin):# MACOSX_DEPLOYMENT_TARGET must be defined for OS X compilation/linking
 #IF(darwin):export MACOSX_DEPLOYMENT_TARGET := @osx_version@
 
 ## places to look for things
-PARROT_DYNEXT = $(BUILD_DIR)/runtime/parrot/dynext
-PGE_LIBRARY   = $(BUILD_DIR)/runtime/parrot/library/PGE
-PERL6GRAMMAR  = $(PGE_LIBRARY)/Perl6Grammar.pbc
-NQP           = $(BUILD_DIR)/compilers/nqp/nqp.pbc
-PCT           = $(BUILD_DIR)/runtime/parrot/library/PCT.pbc
+PARROT_DYNEXT = $(LIB_DIR)/dynext
+PERL6GRAMMAR  = $(LIB_DIR)/library/PGE/Perl6Grammar.pbc
+PCT           = $(LIB_DIR)/PCT.pbc
 
 PMC_DIR       = src/pmc
 
 all: matrixy.pbc
 
-MATRIXY_GROUP = $(PMC_DIR)/matrixy_group$(LOAD_EXT)
+SOURCES = \
+    matrixy.pir src/gen_grammar.pir \
+    src/gen_actions.pir src/gen_builtins.pir \
+    src/gen_internals.pir
 
-SOURCES = matrixy.pir \
-  src/gen_grammar.pir \
-  src/gen_actions.pir \
-  src/gen_builtins.pir \
-  src/gen_internals.pir \
-#  $(MATRIXY_GROUP)
+BUILTINS_PIR = src/builtins/*.pir
 
-BUILTINS_PIR = @builtins_pir@
-
-INTERNALS_PIR = @internals_pir@
-  
-# PMCS = matrixy
-# PMC_SOURCES = $(PMC_DIR)/matrixy.pmc
+INTERNALS_PIR = src/internals/*.pir
 
 # the default target
 matrixy.pbc: $(PARROT) $(SOURCES) 
@@ -56,21 +49,14 @@ src/gen_grammar.pir: $(PERL6GRAMMAR) src/parser/grammar.pg src/parser/grammar-op
 	    src/parser/grammar.pg \
 	    src/parser/grammar-oper.pg \
 
-src/gen_actions.pir: $(NQP) $(PCT) src/parser/actions.pm
-	$(PARROT) $(PARROT_ARGS) $(NQP) --output=src/gen_actions.pir \
-	    --target=pir src/parser/actions.pm
+src/gen_actions.pir: src/parser/actions.pm
+	$(NQP) --output=src/gen_actions.pir --target=pir src/parser/actions.pm
 
 src/gen_builtins.pir: $(BUILTINS_PIR)
 	$(CAT) $(BUILTINS_PIR) >src/gen_builtins.pir
 
 src/gen_internals.pir: $(INTERNALS_PIR)
 	$(CAT) $(INTERNALS_PIR) >src/gen_internals.pir
-
-$(MATRIXY_GROUP): $(PARROT) $(PMC_SOURCES)
-	cd $(PMC_DIR) && $(BUILD_DYNPMC) generate $(PMCS)
-	cd $(PMC_DIR) && $(BUILD_DYNPMC) compile $(PMCS)
-	cd $(PMC_DIR) && $(BUILD_DYNPMC) linklibs $(PMCS)
-	cd $(PMC_DIR) && $(BUILD_DYNPMC) copy --destination=$(PARROT_DYNEXT) $(PMCS)
 
 # regenerate the Makefile
 Makefile: config/makefiles/root.in
@@ -106,22 +92,8 @@ CLEANUPS = \
   matrixy.pbc \
   "src/gen_*.pir" 
 
-PMC_CLEANUPS = \
-  "$(PMC_DIR)/*.h" \
-  "$(PMC_DIR)/*.c" \
-  "$(PMC_DIR)/*.dump" \
-  "$(PMC_DIR)/*$(O)" \
-#IF(win32):  "$(PMC_DIR)/*.exp" \
-#IF(win32):  "$(PMC_DIR)/*.ilk" \
-#IF(win32):  "$(PMC_DIR)/*.manifest" \
-#IF(win32):  "$(PMC_DIR)/*.pdb" \
-#IF(win32):  "$(PMC_DIR)/*.lib" \
-  "$(PMC_DIR)/*$(LOAD_EXT)"
-
-
 clean: testclean
 	$(RM_F) $(CLEANUPS)
-#	$(RM_F) $(PMC_CLEANUPS)
 
 realclean: clean
 	$(RM_F) Makefile
