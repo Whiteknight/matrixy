@@ -91,6 +91,7 @@ test: all
 
 CLEANUPS = \
     matrixy.pbc \
+    matrixy.c \
     matrixy$(O) \
     matrixy@exe@ \
     src/gen_*.pir
