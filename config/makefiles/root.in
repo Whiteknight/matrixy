@@ -16,7 +16,7 @@ RM_F          = @rm_f@
 CP            = @cp@
 CAT           = @cat@
 PARROT        = @bindir@/parrot@exe@
-NQP           = @bindir@/parrot_nqp@exe@
+NQP           = $(PARROT) $(LIB_DIR)/languages/nqp/nqp.pbc
 PBC_TO_EXE    = @bindir@/pbc_to_exe
 
 #IF(darwin):# MACOSX_DEPLOYMENT_TARGET must be defined for OS X compilation/linking
