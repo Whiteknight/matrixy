@@ -2,9 +2,9 @@
 
 =head2 INTRODUCTION
 
-This is a port of the MATLAB/Octave programming language to
-Parrot. See the ROADMAP file for more information on the
-status of this project, and what else needs to be done.
+This is a port of the MATLAB/Octave programming language to Parrot. See the
+ROADMAP file for more information on the status of this project, and what else
+needs to be done.
 
 =head2 ABOUT
 
@@ -12,12 +12,8 @@ Primary goals are:
 
 =over 4
 
-=item* Create a working compiler that understands the
-majority of the MATLAB/Octave programming language.
-
-=item* Create a series of PMCs and library files, especially
-those involving matrices, that can be used by other
-programming languages which target Parrot.
+=item* Create a working compiler that understands the majority of the
+MATLAB/Octave programming language.
 
 =back
 
@@ -27,31 +23,50 @@ This project is broken into three primary components:
 
 =over 4
 
-=item* The first is the parser, located in the
-C<src/parser/> directory. The parser is composed of two
-source files, F<grammar.pg> which is a Perl6Grammar file,
-and F<actions.pm> which is the associated actions file
-written in NQP.
+=item* The first is the parser, located in the C<src/parser/> directory. The
+parser proper is composed of three source files, F<grammar.pg> which is a
+Perl6Grammar file, and F<actions.pm> which is the associated actions file
+written in NQP, and F<grammar-oper.pm> which is the operator precidence parser.
+In addition, several helper functions used by the parser are located in
+C<src/internals>.
 
-=item* The second component is the library of builtin
-functions in the C<src/builtins/> directory. These
-functions are, currently, written primarily in PIR.
-Function names prefixed with an underscore are "private"
-functions for use with the parser. Other functions should
-have names which are the same as names for regular MATLAB
-or Octave functions, since they will be available to the
-HLL.
+=item* The second component is the library of builtin functions in the
+C<src/builtins/> directory. These functions are, currently, written primarily in
+PIR. Function names prefixed with an underscore are "private" functions for use
+with the parser. Other functions should have names which are the same as names
+for regular MATLAB or Octave functions, since they will be available to the
+HLL. These are also separated into different namespaces depending on visibility
+and utility.
 
-=item* the final component is the set of various PMC classes
-that make up the data objects in Matrixy. The "master" super
-class is the "MatrixyData" class. This class represents an
-instantiation of a generic data object. From here, data can
-be subclassed into "Matrix", "Cell Array", or other types
-of values, as necessary.
+=item* A number of library functions are written in M, or mostly M with some
+inline PIR code in C<toolbox/>.
 
 =back
 
+=head2 DEPENDENCIES
+
+Matrixy depends on these dependencies:
+
+=head3 Parrot
+
+To get a proper version of Parrot to build Matrixy, you will need to check out
+and build Parrot from source:
+
+    svn co http://svn.parrot.org/parrot/trunk parrot
+    cd parrot
+    perl Configure.pl
+    make && make test && make install-dev
+
+=head3 Parrot-Linear-Algebra
+
+The linear algebra package for Parrot is available separately and provides
+functionality required by Matrixy. This includes matrix data types and matrix
+manipulation libraries
+
 =head2 BUILDING
+
+Once all dependencies are in place, you can build Matrixy using this sequence of
+commands:
 
     perl Configure.pl
     nmake test
