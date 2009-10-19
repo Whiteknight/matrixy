@@ -35,12 +35,12 @@ eventually.
     .param int nargout
     .param int nargin
     .param pmc args :slurpy
-    .local pmc iter
-    iter = new 'Iterator', args
+    .local pmc myiter
+    myiter = iter args
     $N0 = 0.0
   loop_top:
-    unless iter goto loop_end
-    $N1 = shift iter
+    unless myiter goto loop_end
+    $N1 = shift myiter
     $N0 = $N0 + $N1
     goto loop_top
   loop_end:
