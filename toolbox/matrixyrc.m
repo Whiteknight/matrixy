@@ -1,7 +1,8 @@
-# import clapack library used for inverse function
-import_clapack_library
+% This script file is called from the main driver program in matrixy.pir
+% Add here any settings or globals that the user would like to have in
+% Matrixy by default.
 
-# run user startup script
-if exist('startup') == 1
-    startup
-end
+% Import the clapack library bindings
+%   import_clapack_library()
+
+
