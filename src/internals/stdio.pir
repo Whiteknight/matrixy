@@ -27,11 +27,11 @@ This is non-standard, so it begins with an underscore.
 .sub '_disp_all'
     .param pmc args :slurpy
     # TODO: Update this to call '!get_matrix_string'
-    .local pmc iter
-    iter = new 'Iterator', args
+    .local pmc myiter
+    myiter = iter args
   iter_loop:
-    unless iter goto iter_end
-    $S0 = shift iter
+    unless myiter goto iter_end
+    $S0 = shift myiter
     print $S0
     goto iter_loop
   iter_end:
@@ -50,13 +50,13 @@ and the resulting message is used to raise an exception.
 
 .sub '_error_all'
     .param pmc args :slurpy
-    .local pmc iter
+    .local pmc myiter
     # TODO: Update this to call '!get_matrix_string'
-    iter = new 'Iterator', args
+    myiter = iter args
     $S0 = ''
   iter_loop:
-    unless iter goto iter_end
-    $S1 = shift iter
+    unless myiter goto iter_end
+    $S1 = shift myiter
     $S0 = $S0 . $S1
     goto iter_loop
   iter_end:
@@ -107,7 +107,7 @@ Prints the value of a bare variable or subroutine call name. So writing
 Will print out
 
   ans =
-  
+
       9
 
 if the result of the variable x, or the subroutine call x() returns the value
