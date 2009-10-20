@@ -89,6 +89,9 @@ help:
 test: all
 	$(PERL) t/harness t/*t
 
+install: all
+	# plaaceholder, we don't install yet.
+
 CLEANUPS = \
     matrixy.pbc \
     matrixy.c \
