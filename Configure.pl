@@ -21,6 +21,12 @@ use Getopt::Long qw(:config auto_help);
 our ( $opt_parrot_config );
 GetOptions( 'parrot_config=s' );
 
+print <<HELLO;
+Hello, I'm Configure. My job is to poke and prod your system 
+to figure out how to build Matrixy.
+HELLO
+
+
 #  Get a list of parrot-configs to invoke.
 my @parrot_config_exe = $opt_parrot_config
                       ? ( $opt_parrot_config )
@@ -37,6 +43,16 @@ unless (%config) {
 
 #  Create the Makefile using the information we just got
 create_makefiles(%config);
+
+# this should check if it should be make/gmake/etc
+print <<DIRECTIONS;
+
+You can now type 'make' to build Matrixy.
+
+Happy Hacking,
+    The Matrixy Team
+
+DIRECTIONS
 
 sub read_parrot_config {
     my @parrot_config_exe = @_;
