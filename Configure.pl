@@ -44,10 +44,9 @@ unless (%config) {
 #  Create the Makefile using the information we just got
 create_makefiles(%config);
 
-# this should check if it should be make/gmake/etc
 print <<DIRECTIONS;
 
-You can now type 'make' to build Matrixy.
+You can now type '$config{"make"}' to build Matrixy.
 
 Happy Hacking,
     The Matrixy Team
