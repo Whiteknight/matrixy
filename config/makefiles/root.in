@@ -87,7 +87,7 @@ help:
 	@echo ""
 
 test: all
-	$(PERL) t/harness
+	$(PERL) t/harness t/*t
 
 CLEANUPS = \
     matrixy.pbc \
