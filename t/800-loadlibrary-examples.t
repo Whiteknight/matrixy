@@ -1,4 +1,6 @@
-plan(4)
+plan(4);
+
+start_todo("BLAS is part of parrot-linear-algebra");
 
 import_cblas_library
 addpath("examples/loadlibrary/");
@@ -20,3 +22,5 @@ A = [ 1+2i 2+3i 3+4i; 4+5i 5+6i 6+7i];
 B = [ 2-i 3-2i ; 5-4i 7-6i ; 11-10i 13-12i];
 C = blas_mtimes(A, B, 'Complex');
 is(A*B, C, "complex blas matrix product")
+
+end_todo();
