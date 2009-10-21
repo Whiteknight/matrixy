@@ -39,7 +39,7 @@ object.
     $P1.'parseactions'($P0)
 
     $P1.'commandline_prompt'("\nmatrixy:1> ")
-    $P1.'commandline_banner'("Matrixy, version 0.1.\nCopyright (C) 2009 Blair Sutton and Andrew Whitworth.\n\n")
+    $P1.'commandline_banner'("Matrixy, version 0.1.\nCopyright (C) 2009 See LICENSE for details")
 
     '__initglobals'()
 .end
