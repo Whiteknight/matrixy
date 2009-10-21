@@ -27,7 +27,7 @@ object.
 
 .namespace [ 'Matrixy';'Compiler' ]
 
-.sub 'onload' :anon :load :init
+.sub '__onload' :anon :load :init
     load_bytecode 'PCT.pbc'
 
     $P0 = get_hll_global ['PCT'], 'HLLCompiler'
@@ -40,30 +40,11 @@ object.
 
     $P1.'commandline_prompt'("\nmatrixy:1> ")
     $P1.'commandline_banner'("Matrixy, version 0.1.\nCopyright (C) 2009 Blair Sutton and Andrew Whitworth.\n\n")
+
+    '__initglobals'()
 .end
 
-=item main(args :slurpy)  :main
-
-Start compilation by passing any command line C<args>
-to the Matrixy compiler.
-
-=cut
-
-.sub 'main' :main
-    .param pmc args
-
-    $P0 = compreg 'matrixy'
-    $P1 = $P0.'command_line'(args)
-.end
-
-.include 'src/gen_internals.pir'
-.include 'src/gen_builtins.pir'
-.include 'src/gen_grammar.pir'
-.include 'src/gen_actions.pir'
-
-.namespace []
-
-.sub 'initglobals' :anon :load :init
+.sub '__initglobals'
     $P0 = new 'ResizablePMCArray'
     set_hll_global ['Matrixy';'Grammar';'Actions'], '@?BLOCK', $P0
     $P0 = new 'Undef'
@@ -83,11 +64,30 @@ to the Matrixy compiler.
 
     $P0 = new 'ResizablePMCArray'
     set_hll_global['Matrixy';'Grammar';'Actions'], '@?PARAMS', $P0
+.end
+
+=item main(args :slurpy)  :main
+
+Start compilation by passing any command line C<args>
+to the Matrixy compiler.
+
+=cut
+
+.sub 'main' :main
+    .param pmc args
 
     # load start up file
     $P0 = null
     '!dispatch'('matrixyrc', $P0, 1, 1, 1)
+
+    $P0 = compreg 'matrixy'
+    $P1 = $P0.'command_line'(args)
 .end
+
+.include 'src/gen_internals.pir'
+.include 'src/gen_builtins.pir'
+.include 'src/gen_grammar.pir'
+.include 'src/gen_actions.pir'
 
 .namespace []
 
