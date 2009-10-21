@@ -1,4 +1,4 @@
-plan(14);
+plan(15);
 
 % Dispatch to a function with no args and no returns
 % Defined in t/lib/test1.m
