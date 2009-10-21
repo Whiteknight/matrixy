@@ -89,38 +89,6 @@ to the Matrixy compiler.
 .include 'src/gen_grammar.pir'
 .include 'src/gen_actions.pir'
 
-.namespace []
-
-.sub '!hash'
-    .param pmc fields :slurpy :named
-    .return (fields)
-.end
-
-.sub '_new_empty_array'
-    $P0 = new 'ResizablePMCArray'
-    .return($P0)
-.end
-
-# TODO: Move this to somewhere in src/internals/*
-.sub '_terminator_has_semicolon'
-    .param string term
-    $S0 = substr term, 0, 1
-    if $S0 == ';' goto has_semicolon
-    .return(0)
-  has_semicolon:
-    .return(1)
-.end
-
-.sub '!get_first_array_row'
-    .param pmc m
-    $S0 = typeof m
-    if $S0 == 'ResizablePMCArray' goto have_matrix
-    .return(m)
-  have_matrix:
-    $P0 = m[0]
-    .return($P0)
-.end
-
 =back
 
 =cut

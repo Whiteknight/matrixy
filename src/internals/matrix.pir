@@ -526,6 +526,23 @@ Can only dispatch over an internal function, not a builtin or a library routine.
     # TODO: Implement this.
 .end
 
+=item !get_first_array_row
+
+Get the first row from a matrix. If it's not a matrix/vector, just return
+the PMC itself
+
+=cut
+
+.sub '!get_first_array_row'
+    .param pmc m
+    $S0 = typeof m
+    if $S0 == 'ResizablePMCArray' goto have_matrix
+    .return(m)
+  have_matrix:
+    $P0 = m[0]
+    .return($P0)
+.end
+
 =back
 
 =cut
