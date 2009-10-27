@@ -83,5 +83,7 @@ Lots!
 
 =head2 CONTACT
 
-Contact Project Owners at http://code.google.com/p/matrixy/.
+If you need to contact the Matrixy team, go to the project home page at:
+
+www.github.com\Whiteknight\matrixy
 
