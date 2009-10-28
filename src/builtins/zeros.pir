@@ -10,31 +10,14 @@ Create an n x m matrix of zeros.
     .param int nargin
     .param int rows
     .param int cols
+    $I0 = rows + 1
+    $I1 = cols + 1
 
-    .local pmc A
-    A = new 'ResizablePMCArray'
+    # NumMatrix2D zero-fills by default
+    $P0 = new ['NumMatrix2D']
 
-    .local int i, j, n
-    i = -1
-    next_i:
-        i = i + 1
-        unless i < rows goto return_array
-        $P0 = new 'ResizablePMCArray'
-        $P0 = cols
-        push A, $P0
-        j = -1
-        next_j:
-            j = j + 1
-            unless j < cols goto next_i
-            n = i * cols
-            n = n + j
-            $N0 = 0
-            A[i;j] = $N0
-            goto next_j
-
-    return_array:
-        .return (A)
-
+    $P0[$I0;$I1] = 0.0
+    .return($P0)
 .end
 
 
