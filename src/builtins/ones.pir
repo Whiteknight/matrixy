@@ -12,29 +12,12 @@ Create an n x m matrix of ones.
     .param int cols
 
     .local pmc A
-    A = new 'ResizablePMCArray'
-
-    .local int i, j, n
-    i = -1
-    next_i:
-        i = i + 1
-        unless i < rows goto return_array
-        $P0 = new 'ResizablePMCArray'
-        $P0 = cols
-        push A, $P0
-        j = -1
-        next_j:
-            j = j + 1
-            unless j < cols goto next_i
-            n = i * cols
-            n = n + j
-            $N0 = 1
-            A[i;j] = $N0
-            goto next_j
-
-    return_array:
-        .return (A)
-
+    A = new 'NumMatrix2D'
+    $I0 = rows + 1
+    $I1 = cols + 1
+    A[$I0;$I1] = 1.0
+    A.'fill'(1.0)
+    .return(A)
 .end
 
 
