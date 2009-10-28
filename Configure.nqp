@@ -16,7 +16,7 @@ sub MAIN () {
 
     # Load Parrot config and glue functions
     load_bytecode('aux/config-helpers.pir');
-    
+
     # Check for linalg_group
     Q:PIR {
         .local pmc pla
