@@ -14,6 +14,16 @@ sub MAIN () {
     say("Hello, I'm Configure. My job is to poke and prod your system");
     say("to figure out how to build matrixy.\n");
 
+#    Q:PIR {{
+#        $P0 = loadlib "linalg_group"
+#        if $P0 goto linalg_group_found
+#        say "Cannot find parrot-linear-algebra"
+#        say "Install that first before trying to install Matrixy"
+#        say "http://github.com/Whiteknight/parrot-linear-algebra"
+#        exit 1
+#      linalg_group_found:
+#    }};
+
     # Load Parrot config and glue functions
     load_bytecode('aux/config-helpers.pir');
 
