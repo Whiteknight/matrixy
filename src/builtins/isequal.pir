@@ -5,6 +5,7 @@
 
 .namespace ['_Matrixy';'builtins']
 
+# TODO: Update this to use NumMatrix2D
 .sub 'isequal'
     .param int nargout
     .param int nargin

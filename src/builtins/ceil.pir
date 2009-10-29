@@ -3,24 +3,19 @@
 .sub 'ceil'
     .param int nargout
     .param int nargin
-    .param pmc x
+    .param pmc matrix
+    .const Sub helper = "!_ceil_helper"
 
-$S0 = <<"EOS"
-.sub '' :anon
-    .param int nargout
-    .param int nargin
-    .param pmc x
-    $N0 = x
-    $I0 = ceil $N0
-    .return($I0)
+    $P0 = clone matrix
+    $P0.'iterate_function_inplace'(helper)
+    .return($P0)
 .end
-EOS
 
-    $P0 = compreg "PIR"
-    $P1 = $P0($S0)
-    $P2 = $P1[0]
-    $P3 = '!lookup_function'('arrayfun')
-    $P4 = $P3(1,1,$P2,x)
-    .return($P4)
+.sub '!_ceil_helper'
+    .param pmc matrix
+    .param num x
+    $I0 = ceil x
+    $N0 = $I0
+    .return($N0)
 .end
 

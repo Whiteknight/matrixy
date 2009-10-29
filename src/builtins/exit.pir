@@ -1,5 +1,5 @@
 .sub 'exit'
     .param int nargout
     .param int nargin
-    end
+    exit 0
 .end

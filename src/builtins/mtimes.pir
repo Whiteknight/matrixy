@@ -7,6 +7,7 @@ and is equivalent to A * B.
 
 .namespace ["_Matrixy";"builtins"]
 
+# TODO: Update this to use NumMatrix2D and the BLAS bindings
 .sub 'mtimes'
     .param int nargout
     .param int nargin
@@ -28,7 +29,7 @@ and is equivalent to A * B.
     $P0 = '!get_matrix_sizes'(A)
     A_rows = $P0[0]
     A_cols = $P0[1]
-    
+
     .local int B_rows, B_cols
     $P0 = '!get_matrix_sizes'(B)
     B_rows = $P0[0]

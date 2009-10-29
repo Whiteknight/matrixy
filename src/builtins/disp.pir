@@ -12,7 +12,7 @@ row matrix as well.
     .param int nargout
     .param int nargin
     .param pmc msg
-    $S0 = '!get_matrix_string'(msg)
+    $S0 = msg
     say $S0
     .return()
 .end
