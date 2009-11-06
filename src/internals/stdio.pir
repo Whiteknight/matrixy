@@ -120,7 +120,7 @@ if the result of the variable x, or the subroutine call x() returns the value
     .param pmc value
     print name
     say " = "
-    $S0 = '!get_matrix_string'(value)
+    $S0 = value
     say $S0
     set_hll_global "ans", value
     .return()
@@ -131,7 +131,7 @@ if the result of the variable x, or the subroutine call x() returns the value
     $I0 = defined value
     unless $I0 goto end_print_result
     print "ans = "
-    $S0 = '!get_matrix_string'(value)
+    $S0 = value
     say $S0
     set_hll_global "ans", value
   end_print_result:
