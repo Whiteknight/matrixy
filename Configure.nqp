@@ -21,13 +21,20 @@ sub MAIN () {
     Q:PIR {
         .local pmc pla
         pla = loadlib "linalg_group"
-        unless null pla goto linalg_group_loaded
+        if pla goto linalg_group_loaded
+        goto cannot_load_library
+      linalg_group_loaded:
+        push_eh cannot_load_library
+        $P0 = new ['NumMatrix2D']
+        goto everything_is_fine
+      cannot_load_library:
         say "linalg_group not found"
         say "You must install the parrot-linear-algebra package before"
         say "installing Matrixy."
         say "http://www.github.com/Whiteknight/parrot-linear-algebra"
         exit 1
-      linalg_group_loaded:
+      everything_is_fine:
+        say "linalg_group loaded OK"
     };
 
     # Slurp in the unconfigured Makefile text
