@@ -11,7 +11,7 @@
 
   _its_an_array:
     .local pmc y
-    y = get_attr "Y"
+    y = getattribute "Y"
     .return(y)
 .end
 

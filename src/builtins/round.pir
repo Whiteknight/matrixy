@@ -17,8 +17,11 @@
 .end
 
 .sub '__round_helper' :anon
-    .param num x
-    $N0 = x
+    .param pmc matrix
+    .param num value
+    .param int x
+    .param int y
+    $N0 = value
     $N1 = $N0 + 0.5
     $I0 = floor $N1
     $N2 = $I0

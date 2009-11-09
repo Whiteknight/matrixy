@@ -13,8 +13,10 @@
 
 .sub '!_ceil_helper'
     .param pmc matrix
-    .param num x
-    $I0 = ceil x
+    .param num value
+    .param int x
+    .param int y
+    $I0 = ceil value
     $N0 = $I0
     .return($N0)
 .end

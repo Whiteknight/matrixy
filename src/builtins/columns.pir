@@ -8,6 +8,6 @@
     if $S0 == 'NumMatrix2D' goto _its_an_array
     .return(1)
   _its_an_array:
-    $I0 = get_attr "X"
+    $I0 = getattribute "X"
     .return($I0)
 .end

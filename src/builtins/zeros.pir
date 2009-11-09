@@ -15,8 +15,7 @@ Create an n x m matrix of zeros.
 
     # NumMatrix2D zero-fills by default
     $P0 = new ['NumMatrix2D']
-
-    $P0[$I0;$I1] = 0.0
+    $P0.'resize'($I0, $I1)
     .return($P0)
 .end
 

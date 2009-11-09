@@ -14,8 +14,10 @@
 
 .sub '!_abs_helper'
     .param pmc matrix
-    .param num x
-    $N0 = abs x
+    .param num value
+    .param int x
+    .param int y
+    $N0 = abs value
     .return($N0)
 .end
 

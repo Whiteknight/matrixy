@@ -13,8 +13,10 @@
 
 .sub '!_floor_helper' :anon
     .param pmc matrix
-    .param num x
-    $N0 = x
+    .param num matrix
+    .param int x
+    .param int y
+    $N0 = matrix
     $I0 = floor $N0
     .return($I0)
 .end

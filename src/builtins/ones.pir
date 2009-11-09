@@ -15,8 +15,7 @@ Create an n x m matrix of ones.
     A = new 'NumMatrix2D'
     $I0 = rows + 1
     $I1 = cols + 1
-    A[$I0;$I1] = 1.0
-    A.'fill'(1.0)
+    A.'fill'(1.0, $I0, $I1)
     .return(A)
 .end
 
