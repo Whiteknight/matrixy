@@ -370,7 +370,7 @@ method func_def($/) {
                 ),
                 PAST::Op.new(
                     :pasttype('call'),
-                    :name('!array_col'),
+                    :name('!array'),
                     PAST::Var.new(
                         :name('varargin'),
                         :scope('lexical')
@@ -698,7 +698,7 @@ method array_row($/) {
         $?MATRIXWIDTH := $i;
     } else {
         if $i != $?MATRIXWIDTH {
-            _error('Matrix rows not the same length!');
+            _error_all('Matrix rows not the same length!');
         }
     }
     $?MATRIXHEIGHT++;
