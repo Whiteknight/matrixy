@@ -238,7 +238,10 @@ Construct an array from a range of the form a:b:c
     if $N0 > $N2 goto loop_end
     goto loop_top
   loop_end:
-    .tailcall '!array_col'(newarray)
+    $I0 = elements newarray
+    $P0 = new ['NumMatrix2D']
+    $P0.'initialize_from_array'($I0, 1, newarray)
+    .return($P0)
 .end
 
 .sub '!range_constructor_negative'
@@ -256,7 +259,10 @@ Construct an array from a range of the form a:b:c
     if $N0 < $N2 goto loop_end
     goto loop_top
   loop_end:
-    .tailcall '!array_col'(newarray)
+    $I0 = elements newarray
+    $P0 = new ['NumMatrix2D']
+    $P0.'initialize_from_array'($I0, 1, newarray)
+    .return($P0)
 .end
 
 =item !distribute_matrix_op(PMC a, PMC b, PMC op)

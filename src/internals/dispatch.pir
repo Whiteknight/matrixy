@@ -236,20 +236,19 @@ Returns the modified variable.
     .param pmc value
     .param pmc indices :slurpy
 
-    unless null var goto no_autovivify
-    $P0 = '!array_row'(0)
-    var = '!array_col'($P0)
+    unless null var goto var_exists
+    var = new ['NumMatrix2D']
 
-  no_autovivify:
-    $I0 = indices
+  var_exists:
+    $I0 = elements indices
     if $I0 == 0 goto assign_scalar
 
     # If we have a scalar, autopromote it to a matrix
     # TODO: do a more robust check here for matrix-ness
     $I1 = '!is_scalar'(var)
     if $I1 == 0 goto not_scalar
-    $P0 = '!array_row'(var)
-    var = '!array_col'($P0)
+    $P0 = new ['NumMatrix2D']
+    $P0.'initialize_from_args'(1, 1, var)
 
   not_scalar:
     if $I0 == 1 goto assign_vector
@@ -261,96 +260,15 @@ Returns the modified variable.
   assign_vector:
     $P0 = indices[0]
     $I1 = $P0
-    .tailcall '!indexed_assign_vector'(var, value, $I1)
+    $P0[$I1] = value
+    .return($P0)
   assign_matrix:
     $P0 = indices[0]
     $P1 = indices[1]
     $I1 = $P0
     $I2 = $P1
-    .tailcall '!indexed_assign_matrix'(var, value, $I1, $I2)
-.end
-
-=item '!indexed_assign_vector'
-
-Handles equations of the type:
-
- var(a) = c
-
-Where var could be either a vector or a 2D matrix.
-
-=cut
-
-.sub '!indexed_assign_vector'
-    .param pmc var
-    .param pmc value
-    .param int idx
-    .local int rows
-    .local int cols
-    .local int row
-    .local int col
-    rows = var
-    $P0 = var[0]
-    cols = $P0
-    if rows == 1 goto row_vector
-    if cols == 1 goto col_vector
-
-    # Here, it's a matrix that we're indexing like a vector.
-    # Get the matrix coordinates.
-    dec idx
-    row = idx % rows
-    col = idx / rows
-    inc row
-    inc col
-    if row > rows goto cant_extend
-    if col > cols goto cant_extend
-    .tailcall '!indexed_assign_matrix'(var, value, row, col)
-
-  row_vector:
-    .tailcall '!indexed_assign_matrix'(var, value, 1, idx)
-
-  col_vector:
-    .tailcall '!indexed_assign_matrix'(var, value, idx, 1)
-
-  cant_extend:
-    # We can't extend a matrix using vector-indexing. Throw an error here
-    _error_all("Cannot autoextend a matrix using vector indexing")
-.end
-
-=item '!indexed_assign_matrix'
-
-Handles equations of the form:
-
- var(a, b) = c
-
-Where var is any 2D matrix
-
-=cut
-
-.sub '!indexed_assign_matrix'
-    .param pmc var
-    .param pmc value
-    .param int idrow
-    .param int idcol
-
-    $P0 = var[0]
-    $I0 = var
-    $I1 = $P0
-
-    if idrow <= $I0 goto row_size_ok
-    $I2 = idrow - $I0
-    var = '!add_rows_zero_pad'(var, $I2)
-  row_size_ok:
-    if idcol <= $I1 goto col_size_ok
-    $I2 = idcol - $I1
-    var = '!add_cols_zero_pad'(var, $I2)
-  col_size_ok:
-    dec idrow
-    dec idcol
-    $I0 = var
-    $P0 = var[0]
-    $I1 = $P0
-    var[idrow;idcol] = value
-    .return(var)
+    $P0[$I1;$I2] = value
+    .return($P0)
 .end
 
 =item !find_file_in_path(String name)
