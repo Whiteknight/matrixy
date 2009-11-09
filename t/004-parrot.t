@@ -24,7 +24,7 @@ else
     disp("not ok 5")
 end
 
-if parrot_typeof([1 2]) == "ResizablePMCArray"
+if parrot_typeof([1 2]) == "NumMatrix2D"
     disp("ok 6")
 else
     disp("not ok 6")

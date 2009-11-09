@@ -661,31 +661,47 @@ method named_field($/) {
     make $past;
 }
 
-method array_constructor($/) {
-    # Create an array of array_rows, which are going to be arrays themselves.
-    # All matrices are going to be two dimensional, sometimes that just won't
-    # be obvious.
-    my $past := PAST::Op.new(
-        :name('!array_col'),
-        :pasttype('call'),
-        :node($/)
-    );
-    for $<array_row> {
-        $past.push($($_));
+method array_constructor($/, $key) {
+    our @?MATRIXLITERAL;
+    our $?MATRIXWIDTH;
+    our $?MATRIXHEIGHT;
+    if $key eq "open" {
+        @?MATRIXLITERAL := _new_empty_array();
+        $?MATRIXWIDTH := -1;
+        $?MATRIXHEIGHT := 0;
+    } else {
+        my $past := PAST::Op.new(
+            :name('!matrix'),
+            :pasttype('call'),
+            :node($/)
+        );
+        my $rows;
+        $past.push($?MATRIXWIDTH);
+        $past.push($?MATRIXHEIGHT);
+        for @?MATRIXLITERAL {
+            $past.push($_);
+        }
+        make $past;
     }
-    make $past;
 }
 
 method array_row($/) {
-    my $past := PAST::Op.new(
-        :name('!array_row'),
-        :pasttype('call'),
-        :node($/)
-    );
+    my $i := 0;
+    our @?MATRIXLITERAL;
+    our $?MATRIXWIDTH;
+    our $?MATRIXHEIGHT;
     for $<expression> {
-        $past.push($($_));
+        @?MATRIXLITERAL.push($($_));
+        $i++;
     }
-    make $past;
+    if $?MATRIXWIDTH == -1 {
+        $?MATRIXWIDTH := $i;
+    } else {
+        if $i != $?MATRIXWIDTH {
+            _error('Matrix rows not the same length!');
+        }
+    }
+    $?MATRIXHEIGHT++;
 }
 
 method range_constructor($/, $key) {
