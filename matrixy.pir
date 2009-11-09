@@ -101,9 +101,13 @@ object.
   linalg_group_loaded:
     # TODO: Find a better namespace to store this in, if we need to store
     #       it at all
-    say "pla loaded"
+    push_eh cannot_create_matrix
     $P0 = new ['NumMatrix2D']
     set_hll_global ['Matrixy';'Grammar';'Actions'], '$PLA', pla
+    pop_eh
+    .return()
+  cannot_create_matrix:
+    _error_all("Cannot create NumMatrix2D PMC. Do you have parrot-linear-algebra installed?")
 .end
 
 =item main(args :slurpy)  :main
