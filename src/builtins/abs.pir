@@ -4,7 +4,7 @@
     .param int nargout
     .param int nargin
     .param pmc matrix
-    .const Sub helper = '!_abs_helper'
+    .const "Sub" helper = '!_abs_helper'
 
     $P0 = clone matrix
     $P0.'iterate_function_inplace'(helper)

@@ -12,7 +12,7 @@ Apply a function 'func' to each element of an array 'A'.
     .param pmc f
     .param pmc A
     .param pmc O :slurpy
-    .const Sub helper = "!_arrayfun_helper"
+    .const "Sub" helper = "!_arrayfun_helper"
 
     $S0 = typeof f
     if $S0 == 'Sub' goto main

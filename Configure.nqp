@@ -15,7 +15,7 @@ sub MAIN () {
     say("to figure out how to build matrixy.\n");
 
     # Load Parrot config and glue functions
-    load_bytecode('aux/config-helpers.pir');
+    load_bytecode('build/config-helpers.pir');
 
     # Check for linalg_group
     Q:PIR {
@@ -28,7 +28,7 @@ sub MAIN () {
         say "http://www.github.com/Whiteknight/parrot-linear-algebra"
         exit 1
       linalg_group_loaded:
-    }
+    };
 
     # Slurp in the unconfigured Makefile text
     my $unconfigured := slurp(@ARGS[0] || 'config/makefiles/root.in');

@@ -311,7 +311,7 @@ Can only dispatch over an internal function, not a builtin or a library routine.
     .param pmc a
     .param pmc b
     .param pmc sub
-    .const Sub handler = '!distribute_op_handler'
+    .const "Sub" handler = '!distribute_op_handler'
     $P0 = a.'iterate_function_external'(handler, b, sub)
     .return($P0)
 .end

@@ -10,8 +10,8 @@
     .return(1)
 
   _its_an_array:
-    .local pmc y
-    y = getattribute "Y"
-    .return(y)
+    $P0 = getattribute matrix, "Y"
+    $I0 = $P0
+    .return($I0)
 .end
 

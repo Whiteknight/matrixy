@@ -14,11 +14,9 @@
     .return(result)
 
   _its_an_array:
-    .local int x
-    x = get_attr "X"
-    .local int y
-    y = get_attr "Y"
-    result[0;0] = x
-    result[0;1] = y
+    $P0 = getattribute matrix, "X"
+    $P1 = getattribute matrix, "Y"
+    result[0;0] = $P0
+    result[0;1] = $P1
     .return(result)
 .end

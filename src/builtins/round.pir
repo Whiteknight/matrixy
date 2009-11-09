@@ -4,11 +4,11 @@
     .param int nargout
     .param int nargin
     .param pmc matrix
-    .const Sub helper = "__round_helper"
+    .const "Sub" helper = "__round_helper"
 
-    $S0 = typeof x
+    $S0 = typeof matrix
     if $S0 == 'NumMatrix2D' goto _have_matrix
-    .return(x)
+    .return(matrix)
 
   _have_matrix:
     .local pmc new_matrix
