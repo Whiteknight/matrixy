@@ -169,7 +169,8 @@ TODO: This is probably redundant and unneccessary. Remove this if not needed.
 .sub '!is_scalar'
     .param pmc var
     $S0 = typeof var
-    if $S0 == 'ResizablePMCArray' goto is_not_scalar
+    # TODO: When matrix types does the role "matrix" check that instead
+    if $S0 == 'NumMatrix2D' goto is_not_scalar
     .return(1)
   is_not_scalar:
     .return(0)
@@ -194,21 +195,19 @@ Returns the modified variable.
     .param pmc value
     .param pmc indices :slurpy
 
-    unless null var goto var_exists
-    var = new ['NumMatrix2D']
+    # TODO: Handle block assignments for matrices.
 
-  var_exists:
     $I0 = elements indices
     if $I0 == 0 goto assign_scalar
 
-    # If we have a scalar, autopromote it to a matrix
-    # TODO: do a more robust check here for matrix-ness
-    $I1 = '!is_scalar'(var)
-    if $I1 == 0 goto not_scalar
-    $P0 = new ['NumMatrix2D']
-    $P0.'initialize_from_args'(1, 1, var)
+    unless null var goto var_exists
+    var = new ['NumMatrix2D']
+  var_exists:
 
-  not_scalar:
+    $I1 = '!is_scalar'(var)
+    if $I1 == 0 goto already_a_matrix
+    var = '!matrix'(1, 1, var)
+  already_a_matrix:
     if $I0 == 1 goto assign_vector
     if $I0 == 2 goto assign_matrix
     # TODO: Eventually we are going to need to support 3D matrices and higher
@@ -218,15 +217,19 @@ Returns the modified variable.
   assign_vector:
     $P0 = indices[0]
     $I1 = $P0
-    $P0[$I1] = value
-    .return($P0)
+    dec $I1
+    var[$I1] = value
+    .return(var)
   assign_matrix:
     $P0 = indices[0]
     $P1 = indices[1]
     $I1 = $P0
+    dec $I1
     $I2 = $P1
-    $P0[$I1;$I2] = value
-    .return($P0)
+    dec $I2
+    # TODO: Which way should the indices be, row-column or column-row?
+    var[$I2;$I1] = value
+    .return(var)
 .end
 
 =item !find_file_in_path(String name)
