@@ -267,11 +267,11 @@ Returns the modified variable.
     var.'resize'(idx, 1)
   is_row_vector:
     dec idx
-    var[idx;1] = value
+    var[idx;0] = value
     .return(var)
   is_column_vector:
     dec idx
-    var[1;idx] = value
+    var[0;idx] = value
     .return(var)
   autovivify_error:
     _error("Cannot auto-extend an existing matrix through linear indexing")
