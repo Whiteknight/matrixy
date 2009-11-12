@@ -252,8 +252,8 @@ Returns the modified variable.
     if x == 0 goto autovivify_row_vector
 
     # Case (2)
-    if x == 1 goto is_column_vector
     if y == 1 goto is_row_vector
+    if x == 1 goto is_column_vector
 
     # Case (3)
     $I2 = x * y
