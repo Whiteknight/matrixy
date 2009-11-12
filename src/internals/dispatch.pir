@@ -216,10 +216,8 @@ Returns the modified variable.
     .return(value)
   assign_vector:
     $P0 = indices[0]
-    $I1 = $P0
-    dec $I1
-    var[$I1] = value
-    .return(var)
+    $I0 = $P0
+    .tailcall '!vector_assign'(var, value, $I0)
   assign_matrix:
     $P0 = indices[0]
     $P1 = indices[1]
@@ -230,6 +228,54 @@ Returns the modified variable.
     # TODO: Which way should the indices be, row-column or column-row?
     var[$I2;$I1] = value
     .return(var)
+.end
+
+.sub '!vector_assign'
+    .param pmc var
+    .param pmc value
+    .param int idx
+    .local int x
+    .local int y
+
+    # NumMatrix2D doesn't currently bounds check on linear indexing.
+    # So, we'll do that here for now. Octave's behavior for cases where we
+    # try to linearly index beyond the bounds of the matrix is as follows:
+    # 1) If var doesn't exist, create a new Nx1 row vector
+    # 2) if var does exist and is a vector, extend it logically
+    # 3) if var does exist and is a matrix, throw an error because we can't choose
+    #    how to extend it.
+    $P2 = getattribute var, "X"
+    x = $P2
+    $P2 = getattribute var, "Y"
+    y = $P2
+
+    # Case (1)
+    if x == 0 goto autovivify_row_vector
+
+    # Case (2)
+    if x == 1 goto is_column_vector
+    if y == 1 goto is_row_vector
+
+    # Case (3)
+    $I2 = x * y
+    if idx > $I2 goto autovivify_error
+
+    # If vector exists and doesn't need to be resized just assign it
+    var[idx] = value
+    .return(var)
+
+  autovivify_row_vector:
+    var.'resize'(idx, 1)
+  is_row_vector:
+    dec idx
+    var[idx;1] = value
+    .return(var)
+  is_column_vector:
+    dec idx
+    var[1;idx] = value
+    .return(var)
+  autovivify_error:
+    _error("Cannot auto-extend an existing matrix through linear indexing")
 .end
 
 =item !find_file_in_path(String name)
