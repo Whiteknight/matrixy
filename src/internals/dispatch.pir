@@ -151,7 +151,8 @@ Returns the value
     dec $I0
     $I1 = args[1]
     dec $I1
-    $P0 = var[$I0;$I1]
+    # TODO: Which order should these indices be in?
+    $P0 = var[$I1;$I0]
     .return($P0)
   negative_index_attempt:
     _error_all("invalid index")
