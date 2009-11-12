@@ -120,7 +120,6 @@ Returns the value
     .param pmc args
 
     $S0 = typeof var
-
     # If it's a function handle variable, dispatch it.
     unless $S0 == 'Sub' goto its_a_variable
     if parens == 1 goto execute_sub_handle
@@ -145,7 +144,7 @@ Returns the value
     $I1 = args[0]
     # Make sure it's 0-indexed
     dec $I1
-    $P0 = var[$I0]
+    $P0 = var[$I1]
     .return($P0)
   matrix_indexing:
     $I0 = args[0]
