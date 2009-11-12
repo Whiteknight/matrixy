@@ -48,10 +48,10 @@ method TOP($/, $key) {
                     :pasttype('inline'),
                     :inline(
                         "    .get_results(%r)\n" ~
-                        "    .local string msg\n" ~
-                        "    msg = %r['message']\n" ~
+                        "    .local string __matrixy_msg\n" ~
+                        "    __matrixy_msg = %r['message']\n" ~
                         "    print 'error: '\n" ~
-                        "    say msg\n"
+                        "    say __matrixy_msg\n"
                     )
                 )
             )
