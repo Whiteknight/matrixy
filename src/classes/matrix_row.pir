@@ -28,7 +28,36 @@
     set_attribute self, "has_number", $P0
 .end
 
-.sub 'row_members'
+.sub 'build_row'
     .param pmc args :slurpy
+    .local pmc myiter
+    .local pmc arg
+    .local pmc has_string
+    .local pmc has_number
+    has_string = get_attribute self, "has_string"
+    has_number = get_attribute self, "has_number"
+    myiter = iter args
+  loop_top:
+    unless myiter goto loop_bottom
+    arg = shift myiter
+    $S0 = typeof arg
+    if $S0 == "Integer" goto has_arg_number
+    if $S0 == "Float" goto has_arg_number
+    if $S0 == "String" goto has_arg_string
+    # TODO: What here?
+    goto loop_top
+  has_arg_number:
+    has_number = 1
+    goto loop_top
+  has_arg_string:
+    has_string = 1
+    goto loop_top
+
+  loop_bottom:
     set_attribute, self, "row", args
+.end
+
+.sub 'get_row'
+    $P0 = get_attribute self, "row"
+    .return($P0)
 .end

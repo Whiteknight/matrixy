@@ -67,6 +67,12 @@ object.
     $P0 = box 0
     set_hll_global ['Matrixy';'Grammar';'Actions'], '$?MATRIXHEIGHT', $P0
 
+    $P0 = box 0
+    set_hll_global ['Matrixy';'Grammar';'Actions'], '$?MATRIXSTRING', $P0
+
+    $P0 = box 0
+    set_hll_global ['Matrixy';'Grammar';'Actions'], '$?MATRIXSQUARE', $P0
+
     # list of functions that we've compiled. We cache them to prevent needing
     # to recompile.
     # TODO: This isn't part of the parser, find a better namespace to hold this

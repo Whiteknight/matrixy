@@ -20,6 +20,12 @@
     .return($P0)
 .end
 
+.sub '!matrix_string'
+    .param int x
+    .param int y
+    .param ary :slurpy
+.end
+
 # used in the parser
 .sub '_new_empty_array'
     $P0 = new ['ResizablePMCArray']

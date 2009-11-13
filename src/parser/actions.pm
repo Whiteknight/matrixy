@@ -665,13 +665,24 @@ method array_constructor($/, $key) {
     our @?MATRIXLITERAL;
     our $?MATRIXWIDTH;
     our $?MATRIXHEIGHT;
+    our $?MATRIXSTRING;
+    our $?MATRIXSQUARE;
     if $key eq "open" {
         @?MATRIXLITERAL := _new_empty_array();
-        $?MATRIXWIDTH := -1;
-        $?MATRIXHEIGHT := 0;
+        $?MATRIXWIDTH   := -1;
+        $?MATRIXHEIGHT  := 0;
+        $?MATRIXSTRING  := 0;
+        $?MATRIXSQUARE  := 1;
     } else {
+        if $?MATRIXSQUARE == 0 && $?MATRIXSTRING == 0 {
+            _error_all("Numeric Matrices must be square")
+        }
+        my $constructor := '!matrix';
+        if $?MATRIXSTRING == 1 {
+            $constructor := '!matrix_string';
+        }
         my $past := PAST::Op.new(
-            :name('!matrix'),
+            :name($constructor),
             :pasttype('call'),
             :node($/)
         );
@@ -690,6 +701,7 @@ method array_row($/) {
     our @?MATRIXLITERAL;
     our $?MATRIXWIDTH;
     our $?MATRIXHEIGHT;
+    our $?MATRIXSQUARE;
     for $<expression> {
         @?MATRIXLITERAL.push($($_));
         $i++;
@@ -698,7 +710,7 @@ method array_row($/) {
         $?MATRIXWIDTH := $i;
     } else {
         if $i != $?MATRIXWIDTH {
-            _error_all('Matrix rows not the same length!');
+            $?MATRIXSQUARE := 0
         }
     }
     $?MATRIXHEIGHT++;
@@ -773,6 +785,8 @@ method complex_constant($/) {
 }
 
 method string_constant($/) {
+    our $?MATRIXSTRING;
+    $?MATRIXSTRING := 1;
     make PAST::Val.new(
         :value( $($<string_literal>) ),
         :returns('String'),
