@@ -662,58 +662,27 @@ method named_field($/) {
 }
 
 method array_constructor($/, $key) {
-    our @?MATRIXLITERAL;
-    our $?MATRIXWIDTH;
-    our $?MATRIXHEIGHT;
-    our $?MATRIXSTRING;
-    our $?MATRIXSQUARE;
-    if $key eq "open" {
-        @?MATRIXLITERAL := _new_empty_array();
-        $?MATRIXWIDTH   := -1;
-        $?MATRIXHEIGHT  := 0;
-        $?MATRIXSTRING  := 0;
-        $?MATRIXSQUARE  := 1;
-    } else {
-        if $?MATRIXSQUARE == 0 && $?MATRIXSTRING == 0 {
-            _error_all("Numeric Matrices must be square")
-        }
-        my $constructor := '!matrix';
-        if $?MATRIXSTRING == 1 {
-            $constructor := '!matrix_string';
-        }
-        my $past := PAST::Op.new(
-            :name($constructor),
-            :pasttype('call'),
-            :node($/)
-        );
-        my $rows;
-        $past.push($?MATRIXWIDTH);
-        $past.push($?MATRIXHEIGHT);
-        for @?MATRIXLITERAL {
-            $past.push($_);
-        }
-        make $past;
+    my $past := PAST::Op.new(
+        :name('!matrix'),
+        :pasttype('call'),
+        :node($/)
+    );
+    for $<array_row> {
+        $past.push($($_));
     }
+    make $past;
 }
 
 method array_row($/) {
-    my $i := 0;
-    our @?MATRIXLITERAL;
-    our $?MATRIXWIDTH;
-    our $?MATRIXHEIGHT;
-    our $?MATRIXSQUARE;
+    my $past := PAST::Op.new(
+        :name('!matrix_row'),
+        :pasttype('call'),
+        :node($/)
+    );
     for $<expression> {
-        @?MATRIXLITERAL.push($($_));
-        $i++;
+        $past.push($($_));
     }
-    if $?MATRIXWIDTH == -1 {
-        $?MATRIXWIDTH := $i;
-    } else {
-        if $i != $?MATRIXWIDTH {
-            $?MATRIXSQUARE := 0
-        }
-    }
-    $?MATRIXHEIGHT++;
+    make $past;
 }
 
 method range_constructor($/, $key) {

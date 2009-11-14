@@ -31,11 +31,13 @@ all: matrixy@exe@
 SOURCES = \
     matrixy.pir src/gen_grammar.pir \
     src/gen_actions.pir src/gen_builtins.pir \
-    src/gen_internals.pir
+    src/gen_internals.pir src/gen_classes.pir
 
 BUILTINS_PIR = src/builtins/*.pir
 
 INTERNALS_PIR = src/internals/*.pir
+
+CLASSES_PIR = src/classes/*.pir
 
 # the default target
 matrixy@exe@: matrixy.pbc
@@ -59,6 +61,9 @@ src/gen_builtins.pir: $(BUILTINS_PIR)
 
 src/gen_internals.pir: $(INTERNALS_PIR)
 	$(CAT) $(INTERNALS_PIR) >src/gen_internals.pir
+
+src/gen_classes.pir: $(CLASSES_PIR)
+	$(CAT) $(CLASSES_PIR) >src/gen_classes.pir
 
 # regenerate the Makefile
 Makefile: config/makefiles/root.in
