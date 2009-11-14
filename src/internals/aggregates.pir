@@ -40,8 +40,6 @@
   loop_top:
     unless myiter goto loop_bottom
     thisrow = shift myiter
-    $S0 = typeof thisrow
-    say $S0
     $I0 = thisrow.'has_number'()
     numbers = or numbers, $I0
     $I0 = thisrow.'has_string'()
@@ -75,12 +73,12 @@
     .local int width
     .local int height
     matrix = new ['NumMatrix2D']
-    x = 0
     y = 0
     height = rows
     $P0 = rows[0]
     width = $P0
   outer_loop_top:
+    x = 0
     $P0 = rows[y]
   inner_loop_top:
     $N0 = $P0[x]
