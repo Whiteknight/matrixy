@@ -13,11 +13,11 @@ Apply a function 'func' to each element of an array 'A'.
     .param pmc A
     .param pmc O :slurpy
     .const "Sub" helper = "!_arrayfun_helper"
-
     $S0 = typeof f
     if $S0 == 'Sub' goto have_sub
     $S1 = f
     f = '!lookup_function'($S1)
+    if null f goto no_sub_available
 
   have_sub:
     $S0 = typeof A
@@ -28,16 +28,19 @@ Apply a function 'func' to each element of an array 'A'.
     .return($P0)
 
   its_a_matrix:
-    .lex "function", f
-    A.'iterate_function_inplace'(helper, O :flat)
+    $P0 = A.'iterate_function_external'(helper, f, O :flat)
+    .return($P0)
+  no_sub_available:
     .return(A)
 .end
 
-.sub '!_arrayfun_helper' :outer('arrayfun')
+.sub '!_arrayfun_helper'
     .param pmc matrix
     .param num value
     .param int x
     .param int y
-    $P0 = find_lex "function"
-    .tailcall $P0(value)
+    .param pmc subroutine
+    .param pmc args :slurpy
+    $I0 = args
+    .tailcall subroutine(1, $I0, value, args :flat)
 .end
