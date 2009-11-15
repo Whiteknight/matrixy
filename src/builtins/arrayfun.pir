@@ -40,7 +40,23 @@ Apply a function 'func' to each element of an array 'A'.
     .param int x
     .param int y
     .param pmc subroutine
-    .param pmc args :slurpy
-    $I0 = args
-    .tailcall subroutine(1, $I0, value, args :flat)
+    .param pmc others :slurpy
+    .local pmc myiter
+    .local pmc args
+    $I0 = others
+    args = new ['FixedFloatArray']
+    $I1 = $I0 + 1
+    args = $I1
+    args[0] = value
+    $I0 = 0
+    myiter = iter others
+  loop_top:
+    inc $I0
+    unless myiter goto loop_bottom
+    $P0 = shift myiter
+    $N0 = $P0[x;y]
+    args[$I0] = $N0
+    goto loop_top
+  loop_bottom:
+    .tailcall subroutine(1, $I0, args :flat)
 .end

@@ -364,6 +364,39 @@ matrix and put them into an array for iteration.
     .return(array)
 .end
 
+=item !matrices_are_same_size
+
+Verifies that all matrices passed are the same size
+
+=cut
+
+.sub '!matrices_are_same_size'
+    .param pmc first
+    .param pmc rest :slurpy
+    .local int x
+    .local int y
+    .local pmc myiter
+    $P1 = getattribute first, "X"
+    x = $P1
+    $P2 = getattribute first, "Y"
+    y = $P2
+    myiter = iter rest
+  loop_top:
+    unless myiter goto loop_bottom
+    $P0 = shift myiter
+    $P1 = getattribute $P0, "X"
+    $I1 = $P1
+    if x != $I1 goto sizes_not_equal
+    $P2 = getattribute $P0, "Y"
+    $I2 = $P2
+    if y != $I2 goto sizes_not_equal
+    goto loop_top
+  loop_bottom:
+    .return(1)
+  sizes_not_equal:
+    .return(0)
+.end
+
 =back
 
 =cut
