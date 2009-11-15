@@ -337,23 +337,31 @@ Can only dispatch over an internal function, not a builtin or a library routine.
     .return(result)
 .end
 
-=item !get_first_array_row
+=item !get_for_loop_iteration_array
 
-Get the first row from a matrix. If it's not a matrix/vector, just return
-the PMC itself
+Get an object suitable for use with an iterative "for" loop.
+Matrix types are not iterable. Take the items from the first row of the
+matrix and put them into an array for iteration.
 
 =cut
 
-.sub '!get_first_array_row'
+.sub '!get_for_loop_iteration_array'
     .param pmc m
     $S0 = typeof m
     if $S0 == 'NumMatrix2D' goto have_matrix
     .return(m)
   have_matrix:
+    .local pmc array
     $P0 = getattribute m, "X"
     $I0 = $P0
     $P1 = m.'get_block'(0, 0, $I0, 1)
-    .return($P1)
+    array = new ['ResizablePMCArray']
+  loop_top:
+    dec $I0
+    $N0 = $P1[$I0]
+    array[$I0] = $N0
+    if $I0 > 0 goto loop_top
+    .return(array)
 .end
 
 =back

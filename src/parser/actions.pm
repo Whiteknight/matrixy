@@ -187,7 +187,7 @@ method for_statement($/) {
         :node($/),
         PAST::Op.new(
             :pasttype('call'),
-            :name('!get_first_array_row'),
+            :name('!get_for_loop_iteration_array'),
             $( $<array_or_range> )
         ),
         $body
