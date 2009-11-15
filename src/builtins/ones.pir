@@ -13,9 +13,7 @@ Create an n x m matrix of ones.
 
     .local pmc A
     A = new 'NumMatrix2D'
-    $I0 = rows + 1
-    $I1 = cols + 1
-    A.'fill'(1.0, $I0, $I1)
+    A.'fill'(1.0, cols, rows)
     .return(A)
 .end
 
