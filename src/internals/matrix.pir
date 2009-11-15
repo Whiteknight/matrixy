@@ -26,13 +26,13 @@ throw an error that no strings are found.
     .param pmc x
     $S0 = typeof x
     if $S0 == 'String' goto arg_string
-    if $S0 == 'ResizableStringArray' goto arg_array
+    if $S0 == 'CharMatrix2D' goto arg_matrix
     'error'("Expected string argument not found")
 
   arg_string:
     $S0 = x
     .return($S0)
-  arg_array:
+  arg_matrix:
     $S0 = x[0]
     .return($S0)
 .end

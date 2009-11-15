@@ -95,20 +95,21 @@
     .local pmc matrix
     .local int idx
     .local pmc myiter
-    matrix = new ['NumMatrix2D']
+    matrix = new ['CharMatrix2D']
     idx = 0
-    myiter = iter matrix
+    myiter = iter rows
   loop_top:
     unless myiter goto loop_bottom
     $P0 = shift myiter
-    matrix.'initialize_from_mixed_array'(idx, $P0)
+    $P1 = $P0.'get_array'()
+    matrix.'initialize_from_mixed_array'(idx, $P1)
     inc idx
     goto loop_top
   loop_bottom:
     .return(matrix)
 .end
 
-.sub '!matrix'
+.sub '!matrix_from_rows'
     .param pmc ary :slurpy
     .local pmc lengths
     .local int has_numbers
@@ -130,6 +131,15 @@
     .tailcall '!_build_numerical_matrix'(ary)
   build_string_matrix:
     .tailcall '!_build_string_matrix'(ary)
+.end
+
+.sub '!matrix'
+    .param int x
+    .param int y
+    .param pmc args :slurpy
+    $P0 = new ['NumMatrix2D']
+    $P0.'initialize_from_array'(x, y, args)
+    .return($P0)
 .end
 
 # used in the parser

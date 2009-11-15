@@ -663,7 +663,7 @@ method named_field($/) {
 
 method array_constructor($/, $key) {
     my $past := PAST::Op.new(
-        :name('!matrix'),
+        :name('!matrix_from_rows'),
         :pasttype('call'),
         :node($/)
     );

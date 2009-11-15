@@ -131,3 +131,7 @@
     .return($I0)
 .end
 
+.sub 'get_array' :method
+    $P0 = getattribute self, "row"
+    .return($P0)
+.end
