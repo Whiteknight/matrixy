@@ -6,8 +6,7 @@
     .param pmc matrix
     .const "Sub" helper = "!_floor_helper"
 
-    $P0 = clone matrix
-    $P0.'iterate_function_inplace'(helper)
+    $P0 = matrix.'iterate_function_external'(helper)
     .return($P0)
 .end
 
@@ -16,7 +15,6 @@
     .param num value
     .param int x
     .param int y
-    $N0 = matrix
-    $I0 = floor $N0
+    $I0 = floor value
     .return($I0)
 .end
