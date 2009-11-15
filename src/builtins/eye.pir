@@ -17,9 +17,9 @@ Creates an identity matrix of dimension n.
     A[$I0;$I0] = 1
 
   loop_top:
-    if $I0 == 0 goto loop_end
     A[$I0;$I0] = 1
-    $I0 = $I0 - 1
+    if $I0 == 0 goto loop_end
+    dec $I0
     goto loop_top
   loop_end:
     .return(A)
