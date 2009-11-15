@@ -120,7 +120,7 @@ These operators properly act on matrix arguments.
 .sub "postfix:'"
     .param pmc a
 
-    $P0 = '!lookup_function'('ctranspose')
+    $P0 = '!lookup_function'('transpose')
     $P1 = $P0(1,1,a)
     .return($P1)
 .end

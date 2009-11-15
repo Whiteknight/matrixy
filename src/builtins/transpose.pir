@@ -11,13 +11,14 @@ This function returns the transpose of A and is equivalent to A.'
     .param int nargin
     .param pmc A
 
-    $S0 = typeof A
-    if $S0 == 'NumMatrix2D' goto process_array
+    $I0 = '!is_scalar'(A)
+    if $I0 == 0 goto process_array
     .return (A)
 
   process_array:
-    A.'transpose'()
-    .return (A)
+    $P0 = clone A
+    $P0.'transpose'()
+    .return ($P0)
 .end
 
 
