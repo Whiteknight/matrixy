@@ -48,12 +48,30 @@ object.
 #       initialize the parser so that state is not stored from one parse
 #       to the next. Find a way to add this automatically into the
 #       HLLCompiler object
+# TODO: The Matrixy::Grammar::Actions namespace is just for items that are
+#       used by the parser. Everything else should go to other places
 .sub '__initglobals'
     # Parser data fields that we use to keep track of blocks
     $P0 = new 'ResizablePMCArray'
     set_hll_global ['Matrixy';'Grammar';'Actions'], '@?BLOCK', $P0
+
     $P0 = new 'Undef'
     set_hll_global ['Matrixy';'Grammar';'Actions'], '$?BLOCK', $P0
+
+    $P0  = new 'ResizablePMCArray'
+    set_hll_global ['Matrixy';'Grammar';'Actions'], '@?MATRIXLITERAL', $P0
+
+    $P0 = box -1
+    set_hll_global ['Matrixy';'Grammar';'Actions'], '$?MATRIXWIDTH', $P0
+
+    $P0 = box 0
+    set_hll_global ['Matrixy';'Grammar';'Actions'], '$?MATRIXHEIGHT', $P0
+
+    $P0 = box 0
+    set_hll_global ['Matrixy';'Grammar';'Actions'], '$?MATRIXSTRING', $P0
+
+    $P0 = box 0
+    set_hll_global ['Matrixy';'Grammar';'Actions'], '$?MATRIXSQUARE', $P0
 
     # list of functions that we've compiled. We cache them to prevent needing
     # to recompile.
@@ -78,7 +96,24 @@ object.
     # list to keep track of arguments to a function so we can populate
     # NARGIN.
     $P0 = new 'ResizablePMCArray'
-    set_hll_global['Matrixy';'Grammar';'Actions'], '@?PARAMS', $P0
+    set_hll_global ['Matrixy';'Grammar';'Actions'], '@?PARAMS', $P0
+.end
+
+.sub '__load_pla'
+    .local pmc pla
+    pla = loadlib "linalg_group"
+    unless null pla goto linalg_group_loaded
+    _error_all("Cannot find linalg_group library. Do you have parrot-linear-algebra installed?")
+  linalg_group_loaded:
+    # TODO: Find a better namespace to store this in, if we need to store
+    #       it at all
+    push_eh cannot_create_matrix
+    $P0 = new ['NumMatrix2D']
+    set_hll_global ['Matrixy';'Grammar';'Actions'], '$PLA', pla
+    pop_eh
+    .return()
+  cannot_create_matrix:
+    _error_all("Cannot create NumMatrix2D PMC. Do you have parrot-linear-algebra installed?")
 .end
 
 =item main(args :slurpy)  :main
@@ -91,6 +126,7 @@ to the Matrixy compiler.
 .sub 'main' :main
     .param pmc args
 
+    __load_pla()
     # TODO: We might want to add this sequence as a method on the compiler
     #       object, so we can call it from a library load too.
     # load start up file
@@ -109,4 +145,5 @@ to the Matrixy compiler.
 .include 'src/gen_builtins.pir'
 .include 'src/gen_grammar.pir'
 .include 'src/gen_actions.pir'
+.include 'src/gen_classes.pir'
 

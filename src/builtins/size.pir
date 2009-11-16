@@ -3,15 +3,20 @@
 .sub 'size'
     .param int nargout
     .param int nargin
-    .param pmc x
-    $S0 = typeof x
-    if $S0 == 'ResizablePMCArray' goto _its_an_array
-    .return(1)
+    .param pmc matrix
+    .local pmc result
+    result = new ['NumMatrix2D']
+
+    $S0 = typeof matrix
+    if $S0 == 'NumMatrix2D' goto _its_an_array
+    result[0;0] = 1
+    result[0;1] = 1
+    .return(result)
+
   _its_an_array:
-    $P0 = find_name '!get_matrix_sizes'
-    $P1 = $P0(x)
-    $P0 = find_name '!array_row'
-    $P2 = $P0($P1 :flat)
-    $P0 = find_name '!array_col'
-    .tailcall $P0($P2)
+    $P0 = getattribute matrix, "X"
+    $P1 = getattribute matrix, "Y"
+    result[0;0] = $P0
+    result[0;1] = $P1
+    .return(result)
 .end

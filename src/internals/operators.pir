@@ -10,9 +10,9 @@ These operators properly act on matrix arguments.
     .param pmc a
     .param pmc b
     $S0 = typeof a
-    if $S0 == 'ResizablePMCArray' goto compare_matrices
+    if $S0 == 'NumMatrix2D' goto compare_matrices
     $S1 = typeof b
-    if $S1 == 'ResizablePMCArray' goto compare_matrices
+    if $S1 == 'NumMatrix2D' goto compare_matrices
     iseq $I0, a, b
     .return ($I0)
   compare_matrices:
@@ -25,9 +25,9 @@ These operators properly act on matrix arguments.
     .param pmc a
     .param pmc b
     $S0 = typeof a
-    if $S0 == 'ResizablePMCArray' goto compare_matrices
+    if $S0 == 'NumMatrix2D' goto compare_matrices
     $S1 = typeof b
-    if $S1 == 'ResizablePMCArray' goto compare_matrices
+    if $S1 == 'NumMatrix2D' goto compare_matrices
     isne $I0, a, b
     .return ($I0)
   compare_matrices:
@@ -120,7 +120,7 @@ These operators properly act on matrix arguments.
 .sub "postfix:'"
     .param pmc a
 
-    $P0 = '!lookup_function'('ctranspose')
+    $P0 = '!lookup_function'('transpose')
     $P1 = $P0(1,1,a)
     .return($P1)
 .end
@@ -138,9 +138,9 @@ These operators properly act on matrix arguments.
     .param pmc b
 
     $S0 = typeof a
-    if $S0 == 'ResizablePMCArray' goto do_mtimes
+    if $S0 == 'NumMatrix2D' goto do_mtimes
     $S1 = typeof b
-    if $S1 == 'ResizablePMCArray' goto do_mtimes
+    if $S1 == 'NumMatrix2D' goto do_mtimes
 
     # since we override '*' in M world
     $P1 = a * b

@@ -48,10 +48,10 @@ method TOP($/, $key) {
                     :pasttype('inline'),
                     :inline(
                         "    .get_results(%r)\n" ~
-                        "    .local string msg\n" ~
-                        "    msg = %r['message']\n" ~
+                        "    .local string __matrixy_msg\n" ~
+                        "    __matrixy_msg = %r['message']\n" ~
                         "    print 'error: '\n" ~
-                        "    say msg\n"
+                        "    say __matrixy_msg\n"
                     )
                 )
             )
@@ -187,7 +187,7 @@ method for_statement($/) {
         :node($/),
         PAST::Op.new(
             :pasttype('call'),
-            :name('!get_first_array_row'),
+            :name('!get_for_loop_iteration_array'),
             $( $<array_or_range> )
         ),
         $body
@@ -370,7 +370,7 @@ method func_def($/) {
                 ),
                 PAST::Op.new(
                     :pasttype('call'),
-                    :name('!array_col'),
+                    :name('!array'),
                     PAST::Var.new(
                         :name('varargin'),
                         :scope('lexical')
@@ -661,12 +661,9 @@ method named_field($/) {
     make $past;
 }
 
-method array_constructor($/) {
-    # Create an array of array_rows, which are going to be arrays themselves.
-    # All matrices are going to be two dimensional, sometimes that just won't
-    # be obvious.
+method array_constructor($/, $key) {
     my $past := PAST::Op.new(
-        :name('!array_col'),
+        :name('!matrix_from_rows'),
         :pasttype('call'),
         :node($/)
     );
@@ -678,7 +675,7 @@ method array_constructor($/) {
 
 method array_row($/) {
     my $past := PAST::Op.new(
-        :name('!array_row'),
+        :name('!matrix_row'),
         :pasttype('call'),
         :node($/)
     );
@@ -757,6 +754,8 @@ method complex_constant($/) {
 }
 
 method string_constant($/) {
+    our $?MATRIXSTRING;
+    $?MATRIXSTRING := 1;
     make PAST::Val.new(
         :value( $($<string_literal>) ),
         :returns('String'),

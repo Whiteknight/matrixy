@@ -20,7 +20,6 @@ Will cause the word "hello" to be printed to the terminal.
     .param pmc flags :optional
     .param int has_flags :opt_flag
     if has_flags goto capture_output
-
     $S0 = '!get_first_string'(cmd)
     $I0 = spawnw $S0
     .return($I0)

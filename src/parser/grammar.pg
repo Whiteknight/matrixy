@@ -278,8 +278,10 @@ rule named_field {
 
 # TODO: Should probably be renamed "matrix_constructor", but that's nitpickery
 rule array_constructor {
-    '[' [ <array_row> [<terminator> <array_row>]* ]? ']'
-    {*}
+    '['
+    {*}         #= open
+    [ <array_row> [<terminator> <array_row>]* ]? ']'
+    {*}         #= close
 }
 
 rule array_row {

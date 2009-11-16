@@ -17,7 +17,7 @@ This eventually will be extended to determine the type of name.
     unless null $P0 goto found_name
     .return(0)
 
-    found_name:
-        .return(1)
+  found_name:
+    .return(1)
 .end
 

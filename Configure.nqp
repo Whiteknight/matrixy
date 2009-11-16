@@ -17,6 +17,26 @@ sub MAIN () {
     # Load Parrot config and glue functions
     load_bytecode('config/config-helpers.pir');
 
+    # Check for linalg_group
+    Q:PIR {
+        .local pmc pla
+        pla = loadlib "linalg_group"
+        if pla goto linalg_group_loaded
+        goto cannot_load_library
+      linalg_group_loaded:
+        push_eh cannot_load_library
+        $P0 = new ['NumMatrix2D']
+        goto everything_is_fine
+      cannot_load_library:
+        say "linalg_group not found"
+        say "You must install the parrot-linear-algebra package before"
+        say "installing Matrixy."
+        say "http://www.github.com/Whiteknight/parrot-linear-algebra"
+        exit 1
+      everything_is_fine:
+        say "linalg_group loaded OK"
+    };
+
     # Slurp in the unconfigured Makefile text
     my $unconfigured := slurp(@ARGS[0] || 'config/makefiles/root.in');
 

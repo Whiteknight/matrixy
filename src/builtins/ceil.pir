@@ -3,24 +3,27 @@
 .sub 'ceil'
     .param int nargout
     .param int nargin
-    .param pmc x
+    .param pmc matrix
+    .const "Sub" helper = "!__ceil_helper"
 
-$S0 = <<"EOS"
-.sub '' :anon
-    .param int nargout
-    .param int nargin
-    .param pmc x
-    $N0 = x
-    $I0 = ceil $N0
-    .return($I0)
+    $I0 = '!is_scalar'(matrix)
+    if $I0 == 0 goto is_a_matrix
+    $N0 = matrix
+    $N1 = ceil $N0
+    .return($N1)
+
+  is_a_matrix:
+    $P0 = matrix.'iterate_function_external'(helper)
+    .return($P0)
 .end
-EOS
 
-    $P0 = compreg "PIR"
-    $P1 = $P0($S0)
-    $P2 = $P1[0]
-    $P3 = '!lookup_function'('arrayfun')
-    $P4 = $P3(1,1,$P2,x)
-    .return($P4)
+.sub '!__ceil_helper'
+    .param pmc matrix
+    .param num value
+    .param int x
+    .param int y
+    $I0 = ceil value
+    $N0 = $I0
+    .return($N0)
 .end
 

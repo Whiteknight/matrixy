@@ -1,6 +1,5 @@
 .namespace['_Matrixy';'builtins']
 
-# TODO: lasterr should return an exception object, not just a string
 .sub 'lasterr'
     .param int nargout
     .param int nargin
