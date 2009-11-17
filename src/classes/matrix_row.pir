@@ -6,6 +6,7 @@
     addattribute $P0, "has_number"
     addattribute $P0, "row"
     addattribute $P0, "row_length"
+    addattribute $P0, "has_complex"
 .end
 
 .sub 'init' :vtable
@@ -17,6 +18,8 @@
     setattribute self, "has_number", $P0
     $P0 = box 0
     setattribute self, "row_length", $P0
+    $P0 = box 0
+    setattribute self, "has_complex", $P0
 .end
 
 .sub 'get_iter' :vtable
@@ -69,6 +72,22 @@
     .return(has_number)
 .end
 
+.sub 'has_complex' :method
+    .param int has_complex :optional
+    .param int has_has_complex :opt_flag
+
+    if has_has_complex goto set_has_complex
+    $P0 = getattribute self, "has_complex"
+    $I0 = $P0
+    .return($I0)
+
+  set_has_complex:
+    $P0 = box has_complex
+    setattribute self, "has_complex", $P0
+    .return(has_complex)
+.end
+
+
 .sub 'row_length' :method
     $P0 = getattribute self, "row_length"
     $I0 = $P0
@@ -86,10 +105,12 @@
     .local pmc arg
     .local pmc has_string
     .local pmc has_number
+    .local pmc has_complex
     .local int row_length
     row_length = 0
     has_string = getattribute self, "has_string"
     has_number = getattribute self, "has_number"
+    has_complex = getattribute self, "has_complex"
     myiter = iter args
   loop_top:
     unless myiter goto loop_bottom
@@ -98,6 +119,7 @@
     if $S0 == "Integer" goto has_arg_number
     if $S0 == "Float" goto has_arg_number
     if $S0 == "String" goto has_arg_string
+    if $S0 == "Complex" goto has_arg_complex
     # TODO: What here?
     goto loop_top
   has_arg_number:
@@ -109,6 +131,11 @@
     $S0 = arg
     $I0 = length $S0
     row_length = row_length + $I0
+    goto loop_top
+  has_arg_complex:
+    has_number = 1
+    has_complex = 1
+    inc row_length
     goto loop_top
 
   loop_bottom:
