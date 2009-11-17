@@ -153,6 +153,7 @@ rule term {
    | <string_constant> {*}           #= string_constant
    | <hash_constructor> {*}          #= hash_constructor
    | <array_constructor> {*}         #= array_constructor
+   | <cell_constructor> {*}          #= cell_constructor
    | <function_handle> {*}           #= function_handle
    | <anon_func_constructor> {*}     #= anon_func_constructor
    | <sub_or_var> {*}                #= sub_or_var
@@ -279,12 +280,24 @@ rule named_field {
 # TODO: Should probably be renamed "matrix_constructor", but that's nitpickery
 rule array_constructor {
     '['
-    {*}         #= open
-    [ <array_row> [<terminator> <array_row>]* ]? ']'
-    {*}         #= close
+    [ <array_row> [<terminator> <array_row>]* ]?
+    ']'
+    {*}
 }
 
 rule array_row {
+    <expression> [','? <expression>]*
+    {*}
+}
+
+rule cell_constructor {
+    '{'
+    [ <cell_row> [<terminator> <cell_row>]* ]?
+    '}'
+    {*}
+}
+
+rule cell_row {
     <expression> [','? <expression>]*
     {*}
 }

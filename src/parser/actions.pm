@@ -661,7 +661,7 @@ method named_field($/) {
     make $past;
 }
 
-method array_constructor($/, $key) {
+method array_constructor($/) {
     my $past := PAST::Op.new(
         :name('!matrix_from_rows'),
         :pasttype('call'),
@@ -676,6 +676,30 @@ method array_constructor($/, $key) {
 method array_row($/) {
     my $past := PAST::Op.new(
         :name('!matrix_row'),
+        :pasttype('call'),
+        :node($/)
+    );
+    for $<expression> {
+        $past.push($($_));
+    }
+    make $past;
+}
+
+method cell_constructor($/) {
+    my $past := PAST::Op.new(
+        :name('!cell_from_rows'),
+        :pasttype('call'),
+        :node($/)
+    );
+    for $<cell_row> {
+        $past.push($($_));
+    }
+    make $past;
+}
+
+method cell_row($/) {
+    my $past := PAST::Op.new(
+        :name('!cell_row'),
         :pasttype('call'),
         :node($/)
     );

@@ -11,11 +11,99 @@
     .return(ary)
 .end
 
+.sub '!matrix_from_rows'
+    .param pmc ary :slurpy
+    .local pmc lengths
+    .local int has_numbers
+    .local int has_strings
+    .local int has_complex
+
+    # If there are no rows, just return an empty matrix
+    $I0 = ary
+    unless $I0 == 0 goto construct_the_matrix
+    $P0 = new ['NumMatrix2D']
+    .return($P0)
+
+  construct_the_matrix:
+    (lengths, has_numbers, has_strings, has_complex) = '!_get_rows_info'(ary)
+    unless has_numbers goto dont_check_length
+    '!_verify_array_lengths_equal'(lengths)
+
+  dont_check_length:
+    if has_complex goto build_complex_matrix
+    if has_strings goto build_string_matrix
+    .tailcall '!_build_numerical_matrix'(ary)
+  build_string_matrix:
+    .tailcall '!_build_string_matrix'(ary)
+  build_complex_matrix:
+    if has_strings goto cant_have_both
+    .tailcall '!_build_complex_matrix'(ary)
+  cant_have_both:
+    _error_all("Cannot have both complex and string values in one matrix")
+.end
+
+.sub '!matrix'
+    .param int x
+    .param int y
+    .param pmc args :slurpy
+    $P0 = new ['NumMatrix2D']
+    $P0.'initialize_from_array'(x, y, args)
+    .return($P0)
+.end
+
+
 .sub '!matrix_row'
     .param pmc args :slurpy
     $P0 = new ['matrix_row']
     $P0.'build_row'(args)
     .return($P0)
+.end
+
+.sub '!cell_from_rows'
+    .param pmc rows :slurpy
+    .local pmc cell
+    .local pmc row
+    .local int length
+    cell = new ['PMCMatrix2D']
+    $I0 = rows
+    if $I0 == 0 goto new_empty_cell
+    myiter = iter rows
+    row = shift myiter
+    length = row
+    $I0 = 0
+  loop_top:
+    '!_insert_cell_row'(cell, row, $I0)
+    unless myiter goto loop_bottom
+    row = shift myiter
+    $I1 = row
+    if $I1 != length goto lengths_not_equal
+    goto loop_top
+  loop_bottom:
+  new_empty_cell:
+    .return(cell)
+  lengths_not_equal:
+    _error_all("Row lengths must be equal ", $I1, " != ", length)
+.end
+
+.sub '!_insert_cell_row'
+    .param pmc cell
+    .param pmc row
+    .param int idx
+    .local int length
+    length = row
+    dec length
+  loop_top:
+    $P0 = row[length]
+    cell[idx;length] = $P0
+    if length == 0 goto loop_bottom
+    dec length
+    goto loop_top
+  loop_bottom:
+.end
+
+.sub '!cell_row'
+    .param pmc args :slurpy
+    .return(args)
 .end
 
 .sub '!_get_rows_info'
@@ -136,46 +224,6 @@
     goto loop_top
   loop_bottom:
     .return(matrix)
-.end
-
-.sub '!matrix_from_rows'
-    .param pmc ary :slurpy
-    .local pmc lengths
-    .local int has_numbers
-    .local int has_strings
-    .local int has_complex
-
-    # If there are no rows, just return an empty matrix
-    $I0 = ary
-    unless $I0 == 0 goto construct_the_matrix
-    $P0 = new ['NumMatrix2D']
-    .return($P0)
-
-  construct_the_matrix:
-    (lengths, has_numbers, has_strings, has_complex) = '!_get_rows_info'(ary)
-    unless has_numbers goto dont_check_length
-    '!_verify_array_lengths_equal'(lengths)
-
-  dont_check_length:
-    if has_complex goto build_complex_matrix
-    if has_strings goto build_string_matrix
-    .tailcall '!_build_numerical_matrix'(ary)
-  build_string_matrix:
-    .tailcall '!_build_string_matrix'(ary)
-  build_complex_matrix:
-    if has_strings goto cant_have_both
-    .tailcall '!_build_complex_matrix'(ary)
-  cant_have_both:
-    _error_all("Cannot have both complex and string values in one matrix")
-.end
-
-.sub '!matrix'
-    .param int x
-    .param int y
-    .param pmc args :slurpy
-    $P0 = new ['NumMatrix2D']
-    $P0.'initialize_from_array'(x, y, args)
-    .return($P0)
 .end
 
 # used in the parser
