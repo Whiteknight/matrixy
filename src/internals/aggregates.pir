@@ -15,8 +15,6 @@
     .param pmc args :slurpy
     $P0 = new ['matrix_row']
     $P0.'build_row'(args)
-    $I0 = $P0.'row_length'()
-    say $I0
     .return($P0)
 .end
 

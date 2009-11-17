@@ -41,6 +41,12 @@
     .return($N0)
 .end
 
+.sub 'get_pmc_keyed_int' :vtable
+    .param int idx
+    $P0 = getattribute self, "row"
+    .return($P0)
+.end
+
 
 .sub 'has_string' :method
     .param int has_string :optional
