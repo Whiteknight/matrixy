@@ -64,6 +64,7 @@
     .local pmc cell
     .local pmc row
     .local int length
+    .local pmc myiter
     cell = new ['PMCMatrix2D']
     $I0 = rows
     if $I0 == 0 goto new_empty_cell

@@ -15,7 +15,8 @@ sub MAIN () {
     say("to figure out how to build matrixy.\n");
 
     # Load Parrot config and glue functions
-    load_bytecode('config/config-helpers.pir');
+    pir::load_bytecode("PGE.pbc");
+    pir::load_bytecode('config/config-helpers.pir');
 
     # Check for linalg_group
     Q:PIR {
@@ -26,13 +27,15 @@ sub MAIN () {
       linalg_group_loaded:
         push_eh cannot_load_library
         $P0 = new ['NumMatrix2D']
+        pop_eh
         goto everything_is_fine
       cannot_load_library:
+        pop_eh
         say "linalg_group not found"
         say "You must install the parrot-linear-algebra package before"
         say "installing Matrixy."
         say "http://www.github.com/Whiteknight/parrot-linear-algebra"
-        exit 1
+        .return()
       everything_is_fine:
         say "linalg_group loaded OK"
     };
@@ -45,6 +48,7 @@ sub MAIN () {
 
     # Fix paths on Windows
     if ($OS eq 'MSWin32') {
+        say("D");
         $replaced := subst($replaced, rx('/'), '\\');
     }
 
