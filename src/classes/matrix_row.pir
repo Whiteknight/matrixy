@@ -44,7 +44,8 @@
 .sub 'get_pmc_keyed_int' :vtable
     .param int idx
     $P0 = getattribute self, "row"
-    .return($P0)
+    $P1 = $P0[idx]
+    .return($P1)
 .end
 
 
@@ -139,6 +140,7 @@
     row_length = row_length + $I0
     goto loop_top
   has_arg_complex:
+    say "building row, has complex"
     has_number = 1
     has_complex = 1
     inc row_length

@@ -37,6 +37,7 @@
     .tailcall '!_build_string_matrix'(ary)
   build_complex_matrix:
     if has_strings goto cant_have_both
+    say "Building Complex Matrix"
     .tailcall '!_build_complex_matrix'(ary)
   cant_have_both:
     _error_all("Cannot have both complex and string values in one matrix")
@@ -190,7 +191,7 @@
     .local int y
     .local int width
     .local int height
-    matrix = new ['NumMatrix2D']
+    matrix = new ['ComplexMatrix2D']
     y = 0
     height = rows
     $P0 = rows[0]
@@ -200,6 +201,8 @@
     $P0 = rows[y]
   inner_loop_top:
     $P1 = $P0[x]
+    $S0 = typeof $P1
+    say $S0
     matrix[x;y] = $P1
     inc x
     if x < width goto inner_loop_top

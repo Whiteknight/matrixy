@@ -1,4 +1,4 @@
-pla(7);
+plan(7);
 
 % Test parrot_typeof(), and verify that various data items are the things
 % we think they are
