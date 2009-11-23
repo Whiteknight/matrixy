@@ -89,7 +89,7 @@ help:
 	@echo ""
 
 test: all
-	$(PERL) t/harness t/*t
+	$(PERL) t/harness t/*t t/syntax/*t t/functions/*t
 
 install: all
 	# plaaceholder, we don't install yet.
