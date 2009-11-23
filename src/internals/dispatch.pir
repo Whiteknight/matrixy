@@ -168,12 +168,9 @@ TODO: This is probably redundant and unneccessary. Remove this if not needed.
 
 .sub '!is_scalar'
     .param pmc var
-    $S0 = typeof var
-    # TODO: When matrix types does the role "matrix" check that instead
-    if $S0 == 'NumMatrix2D' goto is_not_scalar
-    .return(1)
-  is_not_scalar:
-    .return(0)
+    $I0 = does var, "matrix"
+    $I1 = not $I0
+    .return($I1)
 .end
 
 =item !indexed_assign
