@@ -3,18 +3,26 @@
 This document talks about the test suite, how it is arranged, how existing
 tests are organized and how new tests are added.
 
-=head1 Test Numbering
+=head1 Test Directories
 
 =over 4
 
-=item 000-099 Core Syntax
+=item C<t/>
 
-=item 100-199 Internals and Helpers
+Tests in the base directory are simple tests for sanity. They prove that the
+basic elements are working and that we can proceed to more advanced tests. These
+sanity tests include proofs that the TAP testing functions are operational.
 
-=item 200-299 PIR Builtins
+=item C<t/syntax/>
 
-=item 300-799 M Library functions
+Tests in the syntax directory test more of the syntax of M, using the TAP testing
+functions.
 
-=item 800-999 Coding STD, Projects, Documentation, other
+=item C<t/functions/>
+
+Tests in the functions directory test the various library functions. These functions
+may be builtin functions (F<src/builtins/>) and toolbox functions (F<toolbox/>).
+The one ommission is that it does not test the TAP functions, which are already
+tested in the base directory.
 
 =back
