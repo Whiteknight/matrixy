@@ -6,9 +6,14 @@
     .param pmc matrix
     .const "Sub" helper = '!_abs_helper'
 
+    $I0 = '!is_scalar'(matrix)
+    if $I0 == 0 goto is_a_matrix
+    $P0 = abs matrix
+    .return(matrix)
+
+  is_a_matrix:
     $P0 = clone matrix
     $P0.'iterate_function_inplace'(helper)
-
     .return($P0)
 .end
 
