@@ -1,6 +1,8 @@
-plan(4);
+plan(6);
 
-# abs (use some pythagorean triples)
+is(abs(-1), 1, "abs on a simple negative integer")
+is(abs(-1.2), 1.2, "abs on a negative float");
+
 is(abs(3+4i), 5, "complex abs 1")
 is(abs(9+40i), 41, "complex abs 2")
 is(abs([ 5+12i, -20; 20, -9-40i ]), [ 13 20; 20 41], "various abs")

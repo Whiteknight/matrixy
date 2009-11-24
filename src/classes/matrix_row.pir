@@ -140,7 +140,6 @@
     row_length = row_length + $I0
     goto loop_top
   has_arg_complex:
-    say "building row, has complex"
     has_number = 1
     has_complex = 1
     inc row_length
