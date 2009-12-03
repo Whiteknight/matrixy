@@ -1,4 +1,4 @@
-plan(9)
+plan(7)
 
 A = [ 1,  2,  3,  4
       5,  6,  7,  8
@@ -35,11 +35,4 @@ is(X, Y, "transpose() on complex matrix");
 
 Y = A.';
 is(X, Y, "transpose op .' on complex matrix");
-
-X = [ 1-2i 3-4i; 2-3i 4-5i];
-Y = ctranspose(A);
-is(X, Y, "ctranspose() on complex matrix");
-
-Y = A';
-is(X, Y, "ctranspose op ' on complex matrix");
 

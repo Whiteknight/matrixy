@@ -2,44 +2,56 @@
 
 =head2 INTRODUCTION
 
-This is a port of the MATLAB/Octave programming language to Parrot. See the
-ROADMAP file for more information on the status of this project, and what else
-needs to be done.
+This is a port of the MATLAB/Octave programming language to Parrot.
+It will not be a 100% perfect clone, instead aiming to recreate a
+majority of the common syntax and semantics of the M language, and
+integrating some of the powerful numerical analysis and linear algebra
+tools.
 
-=head2 ABOUT
-
-Primary goals are:
+=head2 PRIMARY GOALS
 
 =over 4
 
-=item* Create a working compiler that understands the majority of the
-MATLAB/Octave programming language.
+=item* Create a working compiler
+
+We want to support the majority of the MATLAB/Octave programming language,
+but at the same time provide features and interface capabilities as provided
+by Parrot
+
+=item* Build a Mathematics Library
+
+We want to produce a large library of routines that can be used for
+mathematical analysis and linear algebra
+
+=item* Be Interoperable
+
+M is a very natural choice for performaing mathematics and linear algebra
+computations. We want developers of other compilers and projects to be able
+to use Matrixy seemlessly for all their specialized mathematics needs.
 
 =back
 
 =head2 IMPLEMENTATION
 
-This project is broken into three primary components:
+This project is broken into these primary components:
 
 =over 4
 
-=item* The first is the parser, located in the C<src/parser/> directory. The
+=item* The Parser
+
+Located in the C<src/parser/> directory. The
 parser proper is composed of three source files, F<grammar.pg> which is a
 Perl6Grammar file, and F<actions.pm> which is the associated actions file
 written in NQP, and F<grammar-oper.pm> which is the operator precidence parser.
 In addition, several helper functions used by the parser are located in
 C<src/internals>.
 
-=item* The second component is the library of builtin functions in the
-C<src/builtins/> directory. These functions are, currently, written primarily in
-PIR. Function names prefixed with an underscore are "private" functions for use
-with the parser. Other functions should have names which are the same as names
-for regular MATLAB or Octave functions, since they will be available to the
-HLL. These are also separated into different namespaces depending on visibility
-and utility.
+=item* Function Library
 
-=item* A number of library functions are written in M, or mostly M with some
-inline PIR code in C<toolbox/>.
+Located in the F</toolbox> and F<src/builtins/> directories. These functions are
+written in a mixture of PIR and M. Functions will attempt to have names, behavior,
+and calling semantics which are the same as those found in MATLAB and Octave.
+Additional functions may be added as well.
 
 =back
 
@@ -57,33 +69,37 @@ and build Parrot from source:
     perl Configure.pl
     make && make test && make install-dev
 
+NOTE: Must be Parrot 1.6.0 or higher. This requirement is subject to change.
+
 =head3 Parrot-Linear-Algebra
 
 The linear algebra package for Parrot is available separately and provides
 functionality required by Matrixy. This includes matrix data types and matrix
-manipulation libraries
+manipulation libraries.
+
+parrot-linear-algebra can be obtained from:
+
+L<http://github.com/Whiteknight/parrot-linear-algebra
+
+The F<Configure.nqp> step of the build process will fail with an error message
+if the parrot-linear-algebra package is not properly installed and available
+on your system.
 
 =head2 BUILDING
 
 Once all dependencies are in place, you can build Matrixy using this sequence of
 commands:
 
-    perl Configure.pl
-    nmake test
+    parrot-nqp Configure.nqp
+    make test
 
-=head2 TODO
-
-    * Parser
-    * Standard Builtins
-    * Test against Octave Test Suite.
-
-=head2 BUGS
-
-Lots!
+Notice that Parrot must be properly installed on your system and the C<parrot-nqp>
+binary must be located in your PATH. On your system, you may need to replace "make"
+with another variant such as "gmake", "nmake", or "mingw32-make".
 
 =head2 CONTACT
 
 If you need to contact the Matrixy team, go to the project home page at:
 
-www.github.com\Whiteknight\matrixy
+http://www.github.com\Whiteknight\matrixy
 
