@@ -7,7 +7,7 @@ Executes a subroutine in PIR from M code
 .sub 'pir'
     .param int nargout
     .param int nargin
-    .param string code
+    .param pmc code
     .param pmc args :slurpy
     $P0 = compreg 'PIR'
     $P1 = $P0(code)
