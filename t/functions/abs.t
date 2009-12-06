@@ -1,4 +1,4 @@
-plan(6);
+plan(9);
 
 is(abs(-1), 1, "abs on a simple negative integer");
 is(abs(-1.2), 1.2, "abs on a negative float");
