@@ -1,8 +1,8 @@
-% Test that if there is a function declaration here, we call that instead of
-% other stuff in the file
+% Test that if there is a function declaration here of the same name, we
+% call that instead of other stuff in the file
 
-printf("not ok 15\n");
+ok(0, "executed other stuff")
 
 function test_script3()
-    printf("ok 15\n");
+    ok(1, "executed correctly");
 endfunction

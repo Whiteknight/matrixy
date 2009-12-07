@@ -2,3 +2,4 @@ src/gen_*.pir
 *.c
 *.o
 *.pbc
+*~
