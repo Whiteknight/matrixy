@@ -1,7 +1,10 @@
-plan(6);
+plan(9);
 
 is(abs(-1), 1, "abs on a simple negative integer");
 is(abs(-1.2), 1.2, "abs on a negative float");
+is(abs(3+4i), 5, "complex abs 1");
+is(abs(9+40i), 41, "complex abs 2");
+is(abs(3/2+2i), 2.5, "simple rational abs");
 
 is(abs(3+4i), 5, "complex abs 1");
 is(abs(9+40i), 41, "complex abs 2");

@@ -18,6 +18,7 @@ CAT           = @cat@
 PARROT        = @bindir@/parrot@exe@
 NQP           = $(PARROT) $(LIB_DIR)/languages/nqp/nqp.pbc
 PBC_TO_EXE    = @bindir@/pbc_to_exe
+HARNESS       = $(PERL) t/harness
 
 ## places to look for things
 PARROT_DYNEXT = $(LIB_DIR)/dynext
@@ -89,7 +90,7 @@ help:
 	@echo ""
 
 test: all
-	$(PERL) t/harness t/*t t/syntax/*t t/functions/*t
+	$(HARNESS) t/*.t && $(HARNESS) t/syntax/*.t t/functions/*.t t/parrot/*.t
 
 install: all
 	# plaaceholder, we don't install yet.
