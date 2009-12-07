@@ -1,4 +1,4 @@
-plan(15);
+plan(7);
 
 % Dispatch to a function with no args and no returns
 % Defined in t/lib/test1.m
@@ -25,28 +25,12 @@ test5();
 % Dispatch to a function file that starts with whitespace (issue from r197)
 test6()
 
-% feval with a builtin function
-feval('disp', 'ok 7');
-feval('disp', ['ok ', '8']);
-feval('feval', 'disp', 'ok 9');
-feval(['disp'], 'ok 10');
-
 % Show that variables overshadow functions of the same name:
 disp = [10, 11];
 
 if disp(1) == 10
-    printf("ok 11\n");
+    printf("ok 7\n");
 else
-    printf("not ok 11\n");
+    printf("not ok 7\n");
 end
 
-% Show that we can still feval a function if we've overridden it with a variable
-% of the same name
-feval('disp', "ok 12");
-
-% Show that we can find and execute a script file
-test_script(); % Test 13
-
-test_script2(); % Test 14
-
-test_script3(); % Test 15
