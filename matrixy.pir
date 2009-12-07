@@ -123,6 +123,8 @@ to the Matrixy compiler.
 
 =cut
 
+.include "errors.pasm"
+
 .sub 'main' :main
     .param pmc args
 
@@ -130,6 +132,9 @@ to the Matrixy compiler.
     # TODO: We might want to add this sequence as a method on the compiler
     #       object, so we can call it from a library load too.
     # load start up file
+    
+    errorsoff .PARROT_ERRORS_PARAM_COUNT_FLAG
+    errorsoff .PARROT_ERRORS_RESULT_COUNT_FLAG
     $P0 = null
     '!dispatch'('matrixyrc', $P0, 1, 1, 1)
 

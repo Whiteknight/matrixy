@@ -19,6 +19,9 @@ not currently perform any lookups however.
     if $S0 == 'Sub' goto sub_handle
     $S0 = '!get_first_string'(func)
     $P0 = null
+    
+    # The first argument was the name, remove that from the list
+    dec nargin
     .tailcall '!dispatch'($S0, $P0, nargout, nargin, 1, args :flat)
 
   sub_handle:

@@ -1,4 +1,4 @@
-.namespace []
+.namespace ["_Matrixy";"builtins"]
 
 =head1 Matrix-Aware Operators
 

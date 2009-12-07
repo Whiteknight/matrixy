@@ -161,50 +161,50 @@
 .sub '!_build_numerical_matrix'
     .param pmc rows
     .local pmc matrix
-    .local int x
-    .local int y
+    .local int row
+    .local int col
     .local int width
     .local int height
     matrix = new ['NumMatrix2D']
-    y = 0
+    row = 0
     height = rows
     $P0 = rows[0]
     width = $P0
   outer_loop_top:
-    x = 0
-    $P0 = rows[y]
+    col = 0
+    $P0 = rows[row]
   inner_loop_top:
-    $N0 = $P0[x]
-    matrix[x;y] = $N0
-    inc x
-    if x < width goto inner_loop_top
-    inc y
-    if y < height goto outer_loop_top
+    $N0 = $P0[col]
+    matrix[row;col] = $N0
+    inc col
+    if col < width goto inner_loop_top
+    inc row
+    if row < height goto outer_loop_top
     .return(matrix)
 .end
 
 .sub '!_build_complex_matrix'
     .param pmc rows
     .local pmc matrix
-    .local int x
-    .local int y
+    .local int col
+    .local int row
     .local int width
     .local int height
     matrix = new ['ComplexMatrix2D']
-    y = 0
+    row = 0
     height = rows
     $P0 = rows[0]
     width = $P0
   outer_loop_top:
-    x = 0
-    $P0 = rows[y]
+    col = 0
+    $P0 = rows[row]
   inner_loop_top:
-    $P1 = $P0[x]
-    matrix[x;y] = $P1
-    inc x
-    if x < width goto inner_loop_top
-    inc y
-    if y < height goto outer_loop_top
+    $P1 = $P0[col]
+    matrix[row;col] = $P1
+    inc col
+    if col < width goto inner_loop_top
+    inc row
+    if row < height goto outer_loop_top
     .return(matrix)
 .end
 

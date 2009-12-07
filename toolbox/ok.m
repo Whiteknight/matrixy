@@ -8,9 +8,12 @@ function ok(good, comment)
     global _TAP_TEST_CNT;   % the number of the current test
 
     if good == 0
-        printf("not ok %d %s", _TAP_TEST_CNT, comment);
-    else
-        printf("ok %d %s", _TAP_TEST_CNT, comment);
+	printf("not ");
+    end
+    printf("ok %d", _TAP_TEST_CNT);
+
+    if nargin == 2
+        printf(" - %s", comment);
     end
 
     if _TAP_TODO == 1
