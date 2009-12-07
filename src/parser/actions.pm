@@ -359,32 +359,12 @@ method func_def($/) {
 
     my $past := $( $<func_sig> );
 
-    if $?BLOCK.symbol("varargin") {
-        $past.push(
-            PAST::Op.new(
-                :pasttype('bind'),
-                PAST::Var.new(
-                    :name('varargin'),
-                    :scope('lexical'),
-                    :lvalue(1)
-                ),
-                PAST::Op.new(
-                    :pasttype('call'),
-                    :name('!array'),
-                    PAST::Var.new(
-                        :name('varargin'),
-                        :scope('lexical')
-                    )
-                )
-            )
-        );
-    }
     for $<statement> {
         $past.push($($_));
     }
 
     # add a return statement if needed
-    #
+    # TODO: Support multiple returns
     if @RETID {
         my $var := PAST::Var.new(
             :name(@RETID[0].name())
@@ -394,8 +374,8 @@ method func_def($/) {
         @RETID.shift();
     }
 
-    ## remove the block from the scope stack
-    ## and restore the "current" block
+    # remove the block from the scope stack
+    # and restore the "current" block
     @?BLOCK.shift();
     $?BLOCK := @?BLOCK[0];
 
@@ -436,15 +416,34 @@ method func_sig($/) {
             $/.panic('varargin must be the last parameter');
         }
         my $param := $( $_ );
-        $param.scope('parameter');
         if $param.name() eq "varargin" {
             $hasvarargin := 1;
-            $param.slurpy(1);
+            $past.push(
+                PAST::Op.new(
+                    :pasttype('inline'),
+                    :inline(
+                        "    .local pmc varargin\n" ~
+                        "    varargin = new ['PMCMatrix2D']\n" ~
+                        "    \$I0 = elements %0\n" ~
+                        "    varargin.'initialize_from_array'(1, \$I0, %0)\n" ~
+                        "    .lex \"varargin\", varargin\n"
+                    ),
+                    PAST::Var.new(
+                        :name('__varargin_raw'),
+                        :scope('parameter'),
+                        :slurpy(1),
+                        :node($/)
+                    )
+                )
+            );
+            $past.symbol("varargin", :scope('lexical'));
         }
-        $past.push($param);
-
-        ## enter the parameter as a lexical into the block's symbol table
-        $past.symbol($param.name(), :scope('lexical'));
+        else {
+            ## enter the parameter as a lexical into the block's symbol table
+            $param.scope('parameter');
+            $past.symbol($param.name(), :scope('lexical'));
+            $past.push($param);
+        }
     }
 
     if $<return_identifier> {
