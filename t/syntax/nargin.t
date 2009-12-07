@@ -1,7 +1,7 @@
 plan(2)
 
-function n = countargs(a, b, c)
-    n = nargin
+function n = countargs(varargin)
+    n = nargin;
 endfunction
 
 is(countargs(), 0, "nargin with no args");
