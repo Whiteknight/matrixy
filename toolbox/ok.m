@@ -13,7 +13,7 @@ function ok(good, comment)
     printf("ok %d", _TAP_TEST_CNT);
 
     if nargin == 2
-        printf(" %s", comment);
+        printf(" - %s", comment);
     end
 
     if _TAP_TODO == 1
