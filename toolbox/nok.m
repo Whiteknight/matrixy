@@ -9,10 +9,5 @@ function nok(bad, comment)
     else
         bad = 0;
     end
-    
-    if nargin == 2
-        ok(bad, comment);
-    else
-        ok(bad);
-    endif
+    ok(bad, comment);
 endfunction
