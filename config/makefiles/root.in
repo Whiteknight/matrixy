@@ -66,10 +66,6 @@ src/gen_internals.pir: $(INTERNALS_PIR)
 src/gen_classes.pir: $(CLASSES_PIR)
 	$(CAT) $(CLASSES_PIR) >src/gen_classes.pir
 
-# regenerate the Makefile
-Makefile: config/makefiles/root.in
-	$(PERL) Configure.pl
-
 # This is a listing of all targets, that are meant to be called by users
 help:
 	@echo ""
