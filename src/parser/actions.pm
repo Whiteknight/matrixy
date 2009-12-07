@@ -793,15 +793,21 @@ method expression($/, $key) {
         make $($<expr>);
     }
     else {
-        my $past := PAST::Op.new(
-            :name($<type>),
-            :pasttype($<top><pasttype>),
-            :pirop($<top><pirop>),
-            :lvalue($<top><lvalue>),
-            :node($/)
-        );
+        my $past := PAST::Op.new( :node($/) );
+        if $<pasttype> {
+            $past.pasttype( $<top><pasttype> );
+        }
+        else {
+            $past.pasttype('call');
+            $past.push(
+                PAST::Var.new( 
+                    :name(~$<type>),
+                    :namespace("_Matrixy","builtins")
+                )
+            );
+        }
         for @($/) {
-            $past.push( $($_) );
+            $past.push( $_.ast );
         }
         make $past;
     }
