@@ -13,7 +13,7 @@ Create an n x m matrix of zeros.
 
     # NumMatrix2D zero-fills by default
     $P0 = new ['NumMatrix2D']
-    $P0.'resize'(cols, rows)
+    $P0.'resize'(rows, cols)
     .return($P0)
 .end
 

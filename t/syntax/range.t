@@ -11,7 +11,7 @@ X = 1:2:10;
 Y = [1 3 5 7 9];
 is(X, Y, "three-argument range with non-unity step");
 
-X = 5:1
+X = 5:1;
 Y = [5 4 3 2 1];
 is(X, Y, "two-argument range with implied negative step");
 

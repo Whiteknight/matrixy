@@ -13,7 +13,7 @@ Create an n x m matrix of ones.
 
     .local pmc A
     A = new 'NumMatrix2D'
-    A.'fill'(1.0, cols, rows)
+    A.'fill'(1.0, rows, cols)
     .return(A)
 .end
 
