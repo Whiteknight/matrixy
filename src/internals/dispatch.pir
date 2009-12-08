@@ -151,8 +151,7 @@ Returns the value
     dec $I0
     $I1 = args[1]
     dec $I1
-    # TODO: Which order should these indices be in?
-    $P0 = var[$I1;$I0]
+    $P0 = var[$I0;$I1]
     .return($P0)
   negative_index_attempt:
     _error_all("invalid index")
@@ -212,18 +211,14 @@ Returns the modified variable.
   assign_scalar:
     .return(value)
   assign_vector:
-    $P0 = indices[0]
-    $I0 = $P0
+    $I0 = indices[0]
     .tailcall '!vector_assign'(var, value, $I0)
   assign_matrix:
-    $P0 = indices[0]
-    $P1 = indices[1]
-    $I1 = $P0
+    $I1 = indices[0] # row
+    $I2 = indices[1] # column
     dec $I1
-    $I2 = $P1
     dec $I2
-    # TODO: Which way should the indices be, row-column or column-row?
-    var[$I2;$I1] = value
+    var[$I1;$I2] = value
     .return(var)
 .end
 
@@ -241,9 +236,9 @@ Returns the modified variable.
     # 2) if var does exist and is a vector, extend it logically
     # 3) if var does exist and is a matrix, throw an error because we can't choose
     #    how to extend it.
-    $P2 = getattribute var, "X"
+    $P2 = getattribute var, "cols"
     x = $P2
-    $P2 = getattribute var, "Y"
+    $P2 = getattribute var, "rows"
     y = $P2
 
     # Case (1)
@@ -262,14 +257,14 @@ Returns the modified variable.
     .return(var)
 
   autovivify_row_vector:
-    var.'resize'(idx, 1)
+    var.'resize'(1, idx)
   is_row_vector:
     dec idx
-    var[idx;0] = value
+    var[0;idx] = value
     .return(var)
   is_column_vector:
     dec idx
-    var[0;idx] = value
+    var[idx;0] = value
     .return(var)
   autovivify_error:
     _error("Cannot auto-extend an existing matrix through linear indexing")
