@@ -5,11 +5,6 @@ function c = cell(y, x)
     if nargin == 1
         x = y;
     end
-    c = pir([".sub cell_helper"
-             "  .param int y"
-             "  .param int x"
-             "  $P0 = new ['PMCMatrix2D']"
-             "  $P0.'resize'(y, x)"
-             "  .return($P0)"
-             ".end"], y, x);
+    c = parrot_new('PMCMatrix2D');
+    parrot_method(c, "resize", y, x);
 endfunction
