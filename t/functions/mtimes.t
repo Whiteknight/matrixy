@@ -1,4 +1,4 @@
-plan(0);
+plan(3);
 
 start_todo("BLAS Problems");
 
