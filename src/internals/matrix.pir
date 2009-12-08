@@ -259,20 +259,34 @@ matrix and put them into an array for iteration.
 
 .sub '!get_for_loop_iteration_array'
     .param pmc m
-    $S0 = typeof m
-    if $S0 == 'NumMatrix2D' goto have_matrix
+    $I0 = does m, "matrix"
+    if $I0 == 1 goto have_matrix
     .return(m)
   have_matrix:
     .local pmc array
-    $P0 = getattribute m, "X"
-    $I0 = $P0
-    $P1 = m.'get_block'(0, 0, $I0, 1)
+    .local int rows
+    .local int cols
+    .local int idx
+    $P0 = getattribute m, "rows"
+    rows = $P0
+    $P0 = getattribute m, "cols"
+    cols = $P0
     array = new ['ResizablePMCArray']
-  loop_top:
-    dec $I0
-    $N0 = $P1[$I0]
-    array[$I0] = $N0
-    if $I0 > 0 goto loop_top
+    if rows == 0 goto return_array
+    if cols == 0 goto return_array
+    idx = 0
+    $I0 = 0 # current column number
+  col_loop_top:
+    $I1 = 0 # current row number
+  row_loop_top:
+    $P0 = m[$I1;$I0]
+    array[idx] = $P0
+    inc idx
+    inc $I1
+    if $I1 < rows goto row_loop_top
+    inc $I0
+    if $I0 < cols goto col_loop_top
+  return_array:
     .return(array)
 .end
 
