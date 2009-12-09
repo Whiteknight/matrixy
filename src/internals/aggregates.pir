@@ -11,6 +11,11 @@
     .return(ary)
 .end
 
+.sub '!cell'
+    $P0 = new ['PMCMatrix2D']
+    .return($P0)
+.end
+
 .sub '!matrix_from_rows'
     .param pmc ary :slurpy
     .local pmc lengths
@@ -78,6 +83,7 @@
     row = shift myiter
     $I1 = row
     if $I1 != length goto lengths_not_equal
+    inc $I0
     goto loop_top
   loop_bottom:
   new_empty_cell:

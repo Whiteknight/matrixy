@@ -228,8 +228,13 @@ rule func_def {
 }
 
 rule func_sig {
-    'function' [<return_identifier> '=']? <identifier>
-        ['(' [ <identifier> [',' <identifier>]* ]? ')']?
+    'function'
+    [
+            <return_identifier> [',' <return_identifier> ]* '='
+         | '(' <return_identifier> [',' <return_identifier> ]* '=' ')'
+    ]?
+    <identifier>
+    ['(' [ <identifier> [',' <identifier>]* ]? ')']?
     {*}
 }
 

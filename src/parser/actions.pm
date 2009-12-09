@@ -366,8 +366,7 @@ method variable_declaration($/) {
 method func_def($/) {
     our @?BLOCK;
     our $?BLOCK;
-
-    our @RETID;
+    our @FUNCRETURNS;
 
     my $past := $( $<func_sig> );
 
@@ -376,14 +375,18 @@ method func_def($/) {
     }
 
     # add a return statement if needed
-    # TODO: Support multiple returns
-    if @RETID {
-        my $var := PAST::Var.new(
-            :name(@RETID[0].name())
+    if @FUNCRETURNS {
+        my $retop := PAST::Op.new(
+            :pasttype('return')
         );
-        my $retop := PAST::Op.new( $var, :pasttype('return') );
+        for @FUNCRETURNS {
+            $retop.push(
+                PAST::Var.new(
+                    :name($_.name())
+                )
+            )
+        }
         $past.push($retop);
-        @RETID.shift();
     }
 
     # remove the block from the scope stack
@@ -398,14 +401,15 @@ method func_def($/) {
 method func_sig($/) {
     our $?BLOCK;
     our @?BLOCK;
-    our @RETID;
+    our @FUNCRETURNS;
 
+    @FUNCRETURNS := _new_empty_array();
     my $name := $( $<identifier>[0] );
     $<identifier>.shift();
 
     my $past := PAST::Block.new(
         :blocktype('declaration'),
-        :namespace('Matrixy::functions'),
+        :namespace('Matrixy', 'functions'),
         :node($/),
         :name($name.name()),
         PAST::Var.new(
@@ -459,12 +463,38 @@ method func_sig($/) {
     }
 
     if $<return_identifier> {
-        my $param := $( $<return_identifier>[0] );
-        $param.scope('lexical');
-        $param.isdecl(1);
-        $past.push($param);
-        $past.symbol($param.name(), :scope('lexical'));
-        @RETID[0] := $param;
+        my $hasvarargout := 0;
+        my $varargout;
+        for $<return_identifier> {
+            if $hasvarargout == 1 {
+                _error_all("varargout must be the last return value")
+            }
+            my $param := $( $_ );
+            $param.scope('lexical');
+            $param.isdecl(1);
+            $past.symbol($param.name(), :scope('lexical'));
+            if $param.name() eq "varargout" {
+                $hasvarargout := 1;
+                $varargout := $param;
+            }
+            $past.push($param);
+            @FUNCRETURNS.push($param);
+        }
+        if $hasvarargout == 1 {
+            # if we have the varargout return identifier, autovivify it into
+            # a cell
+            $past.push(
+                PAST::Op.new(
+                    $varargout,
+                    PAST::Op.new(
+                        :pasttype('call'),
+                        :name('!cell')
+                    ),
+                    :pasttype('bind'),
+                    :node($/)
+                )
+            );
+        }           
     }
 
     ## set this block as the current block, and store it on the scope stack

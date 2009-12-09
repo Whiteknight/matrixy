@@ -80,7 +80,7 @@ found, null otherwise.
 
     # Second, look for a locally-defined function
     # TODO: Fix this to be "Matrixy";"functions" instead
-    sub_obj = get_hll_global ["Matrixy::functions"], name
+    sub_obj = get_hll_global ["Matrixy";"functions"], name
     $I0 = defined sub_obj
     if $I0 goto _dispatch_found_sub
 
@@ -439,6 +439,11 @@ file.
     func_list = get_hll_global ['Matrixy';'Grammar';'Actions'], '%?FUNCTIONS'
     func_list[name] = sub_obj
     .return(sub_obj)
+.end
+
+.sub '!unpack_return_array'
+    .param pmc args
+    .return(args :flat)
 .end
 
 
