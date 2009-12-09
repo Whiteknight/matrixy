@@ -88,6 +88,7 @@ method terminator($/) {
 
 method stmt_with_value($/, $key) {
     our $?TERMINATOR;
+    our $NUMLVALUES;
     if $?TERMINATOR == 1 {
         make PAST::Op.new(:pasttype('inline'), :node($/),
             :inline("    '!store_last_ans'(%0)"),
@@ -259,71 +260,133 @@ method do_block($/) {
     make $( $<block> );
 }
 
-# We're turning this:
-#     x(a, b) = c
-# into this:
-#     x = '!indexed_assign'(x, c, a, b)
-# We have to do this because of the way that indices are managed in M, and how
-# matrices can be indexed like vectors.
+=begin
+
+Here is what we want things to look like:
+
+  x(...) = c
+  x = '!indexed_assign'(x, c, ...)
+ 
+  [a(...), b(...)] = c
+  $P1 = c[0]
+  a = '!indexed_assign'(a, $P1, ...)
+  $P2 = c[1]
+  b = '!indexed_assign'(b, $P2, ...)
+
+=cut
+
 method assignment($/, $key) {
     our $?BLOCK;
     our %?GLOBALS;
-    our @?PARAMS;
-    our $?LVALUECELL;
+    our $NUMLVALUES;   # number of values in current assignment
+    our $ASSIGNVALUE; # value or array of values to assign
+    our $ARRAYASSIGN; # Whether we are in array or scalar mode
+    our $?LVALUECELL; # lvalue is being indexed with {}
+    our @?LVALUEPARAMS;
+    
     if $key eq "open" {
-        @?PARAMS := _new_empty_array();
+        @?LVALUEPARAMS := _new_empty_array();
+        $NUMLVALUES := 1;
+        $ASSIGNVALUE := PAST::Var.new(
+            :name("__tmp_assign_helper")
+        );
+        $ARRAYASSIGN := PAST::Val.new(
+            :value(0),
+            :returns('Integer')
+        );
+    }
+    elsif $key eq "lvalues" {
+        $NUMLVALUES--;
     }
     else {
-        my $indexer := '!indexed_assign';
-        if $?LVALUECELL {
-            $indexer := '!indexed_assign_cell';
-            $?LVALUECELL := 0;
+        if +($<lvalue>) > 1 {
+            $ARRAYASSIGN.value(1);
         }
-        my $rhs := $( $<expression> );
-        my $lhs := $( $<variable> );
-        $lhs.lvalue(1);
-        my $name := $lhs.name();
-        if %?GLOBALS{$name} {
-            # TODO: Make sure we want "Matrixy::globals", not ["Matrixy","globals"]
-            $lhs.namespace("Matrixy::globals");
-        }
-        $rhs := PAST::Op.new(
-            :pasttype('call'),
-            :name($indexer),
-            PAST::Var.new(
-                :name($lhs.name()),
-                :scope('package')
-            ),
-            $rhs
+        # $ASSIGNVALUE = <expression>
+        my $region := PAST::Stmts.new(
+            PAST::Op.new(
+                :pasttype('bind'),
+                :node($/),
+                $ASSIGNVALUE,
+                $($<expression>)
+            )
         );
-        for @?PARAMS {
-            $rhs.push($_);
+        # Now push all the items that read from $ASSIGNVALUE
+        for $<lvalue> {
+            $region.push( $($_) );
         }
-        make PAST::Op.new(
-            $lhs,
-            $rhs,
-            :pasttype('bind'),
-            :name( $lhs.name() ),
-            :node($/)
-        );
+        make $region;
     }
 }
 
+method lvalue($/) {
+    our $NUMLVALUES;     # number of values in current assignment
+    our $ASSIGNVALUE;   # value or array of values to assign
+    our $ARRAYASSIGN;   # Whether we are in array or scalar mode
+    our $?LVALUECELL;   # Whether the lvalue is indexed with {}
+    our %?GLOBALS;      # list of variables explicitly described as global
+    our @?LVALUEPARAMS; # the indices on the lvalue
+   
+    my $indexer := '!indexed_assign';
+    if $?LVALUECELL {
+        $indexer := '!indexed_assign_cell';
+        $?LVALUECELL := 0;
+    }
+    my $lhs := $( $<variable> );
+    $lhs.lvalue(1);
+    my $name := $lhs.name();
+    if %?GLOBALS{$name} {
+        # TODO: Make sure we want "Matrixy::globals", not ["Matrixy","globals"]
+        $lhs.namespace("Matrixy::globals");
+    }
+    # ... = '!indexed_assign'(var, value, idx, array?, ...)
+    my $idx := _integer_copy($NUMLVALUES);
+    $idx--;    
+    my $idxnode := PAST::Val.new(
+        :value($idx),
+        :returns('Integer')
+    );
+    my $rhs := PAST::Op.new(
+        :pasttype('call'),
+        :name($indexer),
+        PAST::Var.new(
+            :name($name),
+            :scope('package')
+        ),
+        $ASSIGNVALUE,
+        $idxnode,
+        $ARRAYASSIGN
+    );
+    for @?LVALUEPARAMS {
+        $rhs.push($_);
+    }
+    $NUMLVALUES++;
+    make PAST::Op.new(
+        $lhs,
+        $rhs,
+        :pasttype('bind'),
+        :name( $name ),
+        :node($/)
+    );
+}
+    
+    
+
 method lvalue_postfix_index($/, $key) {
-    our @?PARAMS;
+    our @?LVALUEPARAMS;
     our $?LVALUECELL;
     if $key eq "cellexpression" {
         $?LVALUECELL := 1;
     }
     if $key eq "expressions" || $key eq "cellexpression" {
         for $<expression> {
-            @?PARAMS.push($($_));
+            @?LVALUEPARAMS.push($($_));
         }
     }
     else {
         # TODO: This isn't right for structures
         my $name := $( $<identifier> ).name();
-        @?PARAMS.push(
+        @?LVALUEPARAMS.push(
             PAST::Val.new(
                 :value($name),
                 :returns('String')
@@ -562,9 +625,12 @@ method anon_func_constructor($/) {
 method sub_or_var($/, $key) {
     our @?BLOCK;
     our %?GLOBALS;
+    our $NUMLVALUES;
+    
     my $invocant := $( $<primary> );
     my $name := $invocant.name();
     my $parens := 0;
+
     if $key eq "args" {
         $parens := 1;
     } elsif $key eq "cellargs" {
@@ -574,19 +640,26 @@ method sub_or_var($/, $key) {
         # TODO: "Matrixy";"globals"
         $invocant.namespace("Matrixy::globals");
     }
+    
     my $nargin := 0;
-    my $nargout := 0;
+    my $nargout := 1;
+    if _is_defined($NUMLVALUES) {
+        $nargout := $NUMLVALUES;
+    }
+
     my $past := PAST::Op.new(
         :name('!dispatch'),
         :pasttype('call'),
         :node($/)
     );
+
     if $<expression> {
         for $<expression> {
             $past.push($($_));
             $nargin++;
         }
     }
+
     $past.unshift(
         PAST::Val.new(
             :value($parens),

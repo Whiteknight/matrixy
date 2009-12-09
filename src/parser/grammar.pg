@@ -68,11 +68,19 @@ token sys_bare_words {
 }
 
 rule assignment {
-    {*} #= open
-    <variable>
-    <lvalue_postfix_index>*
+    {*}   #= open
+    [
+              <lvalue> [',' <lvalue>]*
+        | '[' <lvalue> [',' <lvalue>]* ']'
+    ]
+    {*}   #= lvalues
     '=' <expression>
-    {*} #= close
+    {*}   #= close
+}
+
+rule lvalue {
+    <variable> <lvalue_postfix_index>*
+    {*}
 }
 
 rule lvalue_postfix_index {

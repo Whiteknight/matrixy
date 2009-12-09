@@ -239,3 +239,20 @@
     .return($P0)
 .end
 
+.sub '_is_defined'
+    .param pmc item
+    if null item goto not_defined
+    $S0 = typeof item
+    if $S0 == "Undef" goto not_defined
+    .return(1)
+  not_defined:
+    .return(0)
+.end
+
+.sub '_integer_copy'
+    .param int i
+    $P0 = new 'Integer'
+    $P0 = i
+    .return($P0)
+.end
+

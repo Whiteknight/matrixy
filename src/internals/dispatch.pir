@@ -273,9 +273,15 @@ Returns the modified variable.
 .sub '!indexed_assign'
     .param pmc var
     .param pmc value
+    .param int idx
+    .param int array_assign
     .param pmc indices :slurpy
 
-    # TODO: Handle block assignments for matrices.
+    # If array_assign == 1, value is a regular scalar value. Otherwise, it's an
+    # aggregate and idx is the index of the value
+    if array_assign == 0 goto have_final_value
+    value = value[idx]
+  have_final_value:
 
     $I0 = elements indices
     if $I0 == 0 goto assign_scalar

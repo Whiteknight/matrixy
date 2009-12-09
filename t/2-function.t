@@ -76,7 +76,8 @@ function x = argsouttest()
     if nargout == 1
         printf("ok 10\n");
     else
-        printf("not ok 10 - %d# TODO need to implement nargout\n", nargout);
+        printf("not ok 10\n");
     endif
 endfunction
 a = argsouttest();
+
