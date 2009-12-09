@@ -280,6 +280,7 @@ Returns the modified variable.
     # If array_assign == 1, value is a regular scalar value. Otherwise, it's an
     # aggregate and idx is the index of the value
     if array_assign == 0 goto have_final_value
+    if null value goto have_final_value
     value = value[idx]
   have_final_value:
 

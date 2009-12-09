@@ -44,8 +44,9 @@ rule statement {
 
 # Statement types that would display a value if not terminated with an ';'
 rule stmt_with_value {
+    {*}                                     #= open
+      <expression> <terminator> {*}          #= expression
     | <assignment> <terminator> {*}          #= assignment
-    | <expression> <terminator> {*}          #= expression
 }
 
 token terminator {

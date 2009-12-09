@@ -88,29 +88,34 @@ method terminator($/) {
 
 method stmt_with_value($/, $key) {
     our $?TERMINATOR;
-    our $NUMLVALUES;
-    if $?TERMINATOR == 1 {
-        make PAST::Op.new(:pasttype('inline'), :node($/),
-            :inline("    '!store_last_ans'(%0)"),
-            $( $/{$key} )
-        );
+    if $key eq "open" {
+        our $NUMLVALUES;
+        $NUMLVALUES := 0;
     }
-    elsif $key eq "expression" {
-        make PAST::Op.new(:pasttype('inline'), :node($/),
-            :inline("    '!print_result_e'(%0)"),
-            $( $<expression> )
-        )
-    }
-    elsif $key eq "assignment" {
-        my $assignment := $( $<assignment> );
-        my $past := PAST::Stmts.new( :node($/),
-            PAST::Op.new( :pasttype('inline'), :node($/),
-                :inline("    '!print_result_a'(%0, %1)"),
-                PAST::Val.new( :value( $assignment.name() ), :returns('String')),
-                $assignment
+    else {
+        if $?TERMINATOR == 1 {
+            make PAST::Op.new(:pasttype('inline'), :node($/),
+                :inline("    '!store_last_ans'(%0)"),
+                $( $/{$key} )
+            );
+        }
+        elsif $key eq "expression" {
+            make PAST::Op.new(:pasttype('inline'), :node($/),
+                :inline("    '!print_result_e'(%0)"),
+                $( $<expression> )
             )
-        );
-        make $past;
+        }
+        elsif $key eq "assignment" {
+            my $assignment := $( $<assignment> );
+            my $past := PAST::Stmts.new( :node($/),
+                PAST::Op.new( :pasttype('inline'), :node($/),
+                    :inline("    '!print_result_a'(%0, %1)"),
+                    PAST::Val.new( :value( $assignment.name() ), :returns('String')),
+                    $assignment
+                )
+            );
+            make $past;
+        }
     }
 }
 
@@ -315,6 +320,7 @@ method assignment($/, $key) {
         for $<lvalue> {
             $region.push( $($_) );
         }
+        $NUMLVALUES := 0;
         make $region;
     }
 }
@@ -527,36 +533,56 @@ method func_sig($/) {
 
     if $<return_identifier> {
         my $hasvarargout := 0;
-        my $varargout;
         for $<return_identifier> {
             if $hasvarargout == 1 {
                 _error_all("varargout must be the last return value")
             }
             my $param := $( $_ );
-            $param.scope('lexical');
-            $param.isdecl(1);
-            $past.symbol($param.name(), :scope('lexical'));
             if $param.name() eq "varargout" {
+                _disp_all("has varargout");
                 $hasvarargout := 1;
-                $varargout := $param;
             }
-            $past.push($param);
-            @FUNCRETURNS.push($param);
+            else {
+                _disp_all("a normal parameter ", $param.name());
+                $param.scope('lexical');
+                $param.isdecl(1);
+                $past.symbol($param.name(), :scope('lexical'));
+                $past.push($param);
+                @FUNCRETURNS.push($param);
+            }
         }
         if $hasvarargout == 1 {
             # if we have the varargout return identifier, autovivify it into
             # a cell
+            _disp_all("setting up varargout");
             $past.push(
                 PAST::Op.new(
-                    $varargout,
+                    :pasttype('bind'),
+                    :node($/),
+                    PAST::Var.new(
+                        :name("varargout"),
+                        :scope("lexical"),
+                        :isdecl(1),
+                        :node($/)
+                    ),
                     PAST::Op.new(
                         :pasttype('call'),
-                        :name('!cell')
-                    ),
-                    :pasttype('bind'),
+                        :name('!cell'),
+                        :node($/)
+                    )
+                )
+            );
+            _disp_all("setting scope");
+            $past.symbol("varargout", :scope("lexical"));
+            _disp_all("adding retvalue");
+            @FUNCRETURNS.push(
+                PAST::Var.new(
+                    :name("varargout"),
+                    :scope("lexical"),
                     :node($/)
                 )
             );
+            _disp_all("done with varargout");
         }           
     }
 
@@ -642,7 +668,7 @@ method sub_or_var($/, $key) {
     }
     
     my $nargin := 0;
-    my $nargout := 1;
+    my $nargout := 0;
     if _is_defined($NUMLVALUES) {
         $nargout := $NUMLVALUES;
     }
