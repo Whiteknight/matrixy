@@ -269,20 +269,27 @@ method assignment($/, $key) {
     our $?BLOCK;
     our %?GLOBALS;
     our @?PARAMS;
+    our $?LVALUECELL;
     if $key eq "open" {
         @?PARAMS := _new_empty_array();
     }
     else {
+        my $indexer := '!indexed_assign';
+        if $?LVALUECELL {
+            $indexer := '!indexed_assign_cell';
+            $?LVALUECELL := 0;
+        }
         my $rhs := $( $<expression> );
         my $lhs := $( $<variable> );
         $lhs.lvalue(1);
         my $name := $lhs.name();
         if %?GLOBALS{$name} {
+            # TODO: Make sure we want "Matrixy::globals", not ["Matrixy","globals"]
             $lhs.namespace("Matrixy::globals");
         }
         $rhs := PAST::Op.new(
             :pasttype('call'),
-            :name('!indexed_assign'),
+            :name($indexer),
             PAST::Var.new(
                 :name($lhs.name()),
                 :scope('package')
@@ -304,12 +311,17 @@ method assignment($/, $key) {
 
 method lvalue_postfix_index($/, $key) {
     our @?PARAMS;
-    if $key eq "expressions" {
+    our $?LVALUECELL;
+    if $key eq "cellexpression" {
+        $?LVALUECELL := 1;
+    }
+    if $key eq "expressions" || $key eq "cellexpression" {
         for $<expression> {
             @?PARAMS.push($($_));
         }
     }
     else {
+        # TODO: This isn't right for structures
         my $name := $( $<identifier> ).name();
         @?PARAMS.push(
             PAST::Val.new(
@@ -522,7 +534,14 @@ method sub_or_var($/, $key) {
     our %?GLOBALS;
     my $invocant := $( $<primary> );
     my $name := $invocant.name();
+    my $parens := 0;
+    if $key eq "args" {
+        $parens := 1;
+    } elsif $key eq "cellargs" {
+        $parens := 2;
+    }
     if %?GLOBALS{$name} {
+        # TODO: "Matrixy";"globals"
         $invocant.namespace("Matrixy::globals");
     }
     my $nargin := 0;
@@ -540,7 +559,7 @@ method sub_or_var($/, $key) {
     }
     $past.unshift(
         PAST::Val.new(
-            :value($key eq "args"),
+            :value($parens),
             :returns('Integer')
         )
     );
@@ -577,15 +596,6 @@ method bare_words($/) {
 
 method primary($/) {
     my $past := $( $<identifier> );
-    for $<postfix_expression> {
-        my $expr := $( $_ );
-        ## set the current $past as the first child of $expr;
-        ## $expr is either a key or an index; both are "keyed"
-        ## variable access, where the first child is assumed
-        ## to be the aggregate.
-        $expr.unshift($past);
-        $past := $expr;
-    }
     make $past;
 }
 
@@ -595,68 +605,6 @@ method primary($/) {
 method variable($/) {
     our $?BLOCK;
     my $past := $( $<identifier> );
-    my $name := $past.name();
-    for $<postfix_expression> {
-        my $expr := $( $_ );
-        $expr.unshift($past);
-        $past := $expr;
-    }
-    make $past;
-}
-
-method postfix_expression($/, $key) {
-    make $( $/{$key} );
-}
-
-method key($/) {
-    my $key := $( $<expression> );
-
-    make PAST::Var.new(
-        $key,
-        :scope('keyed'),
-        :vivibase('Hash'),
-        :viviself('Undef'),
-        :node($/)
-    );
-}
-
-method member($/) {
-    my $member := $( $<identifier> );
-    ## x.y is syntactic sugar for x{"y"}, so stringify the identifier:
-    my $key := PAST::Val.new(
-        :returns('String'),
-        :value($member.name()),
-        :node($/)
-    );
-
-    ## the rest of this method is the same as method key() above.
-    make PAST::Var.new(
-        $key,
-        :scope('keyed'),
-        :vivibase('Hash'),
-        :viviself('Undef'),
-        :node($/)
-    );
-}
-
-method index($/) {
-    my $index := $( $<expression> );
-
-    make PAST::Var.new(
-        $index,
-        :scope('keyed'),
-        :vivibase('ResizablePMCArray'),
-        :viviself('Undef'),
-        :node($/)
-    );
-}
-
-method named_field($/) {
-    my $past := $( $<expression> );
-    my $name := $( $<string_constant> );
-    ## the passed expression is in fact a named argument,
-    ## use the named() accessor to set that name.
-    $past.named($name);
     make $past;
 }
 
@@ -724,21 +672,6 @@ method subexpression($/, $key) {
     make $( $/{$key} );
 }
 
-method hash_constructor($/) {
-    ## use the parrot calling conventions to
-    ## create a hash, using the "anonymous" sub
-    ## !hash (which is not a valid Squaak name)
-    my $past := PAST::Op.new(
-        :name('!hash'),
-        :pasttype('call'),
-        :node($/)
-    );
-    for $<named_field> {
-        $past.push($($_));
-    }
-    make $past;
-}
-
 method term($/, $key) {
     make $( $/{$key} );
 }
@@ -799,7 +732,7 @@ method expression($/, $key) {
         else {
             $past.pasttype('call');
             $past.push(
-                PAST::Var.new( 
+                PAST::Var.new(
                     :name(~$<type>),
                     :namespace("_Matrixy","builtins")
                 )

@@ -31,7 +31,7 @@ rule statement_list {
 }
 
 rule stat_or_def {
-    | <statement> {*}                         #= statement
+    | <statement> {*}                        #= statement
     | <func_def> {*}                         #= func_def
 }
 
@@ -78,6 +78,7 @@ rule assignment {
 rule lvalue_postfix_index {
     | '.' <identifier> {*}                           #= identifier
     | '(' <expression> [ ',' <expression> ]* ')' {*} #= expressions
+    | '{' <expression> [ ',' <expression> ]* '}' {*} #= cellexpression
 }
 
 ################################################################################
@@ -89,9 +90,12 @@ rule lvalue_postfix_index {
 rule sub_or_var {
     | <primary>
       '(' [ <expression> [',' <expression>]* ]? ')'
-      {*}                                    #= args
+      {*}                                            #= args
+    | <primary>
+      '{' [ <expression> [',' <expression>]* ]? '}'
+      {*}                                            #= cellargs
     #| <primary> <bare_words> {*}
-    | <primary> {*}                         #= noargs
+    | <primary> {*}                                  #= noargs
 }
 
 # TODO: This should match everything upto but not including a terminator token
@@ -108,31 +112,13 @@ rule global_statement {
 # An ambiguous primary element, could be a subroutine call or a variable
 # reference, depending on context
 rule primary {
-    <identifier> <postfix_expression>*
+    <identifier>
     {*}
 }
 
 # An unambiguous variable reference, based on context
 rule variable {
-    <identifier> <postfix_expression>*
-    {*}
-}
-
-rule postfix_expression {
-    | <key> {*}                      #= key
-    | <index> {*}                    #= index
-}
-
-rule key {
-    '{' <expression> '}'
-    {*}
-}
-
-# TODO: This isn't really valid M syntax. We're keeping this as a "feature"
-#       to help disambiguate variable and subroutine calls.
-rule index {
-    '[' <expression> ']'
-    {*}
+    <identifier> {*}
 }
 
 # This rule is used in places like ranges where using <expression> would cause
@@ -151,7 +137,6 @@ rule term {
    | <float_constant> {*}            #= float_constant
    | <integer_constant> {*}          #= integer_constant
    | <string_constant> {*}           #= string_constant
-   | <hash_constructor> {*}          #= hash_constructor
    | <array_constructor> {*}         #= array_constructor
    | <cell_constructor> {*}          #= cell_constructor
    | <function_handle> {*}           #= function_handle
@@ -262,18 +247,6 @@ token return_identifier {
 rule anon_func_constructor {
     '@' '(' [ <identifier> [',' <identifier>]* ]? ')'
     <expression>
-    {*}
-}
-
-# TODO: Does M have things like this, or not? Do we want to keep hashes as a
-#       feature?
-rule hash_constructor {
-    '{' [ <named_field> [',' <named_field>]* ]? '}'
-    {*}
-}
-
-rule named_field {
-    <string_constant> '=>' <expression>
     {*}
 }
 
