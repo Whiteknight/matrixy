@@ -18,10 +18,21 @@ C<(5)>.
 
 retrieve a value using the following syntax:
 
-  foo = bar(1, 2)
+  bar
+  bar ...
+  bar(...)
+  bar{...}
 
-bar could be either a matrix or a subroutine. Handles all the idiosyncratic
-rules for these kinds of things in M.
+These are r-values only, not l-value assignment forms. bar could be
+a matrix, a cell array, a func handle, or a subroutine call. We will take
+the name of the variable and it's current value. Some rules:
+
+1) functions are stored in the Matrixy::builtins namespace and "var" will
+   be null here. Look up the function in the namespace and dispatch it
+2) matrices and cells will have non-null values here. They must be vivified
+   somewhere else.
+
+
 
 =cut
 
@@ -39,14 +50,14 @@ rules for these kinds of things in M.
     if null var goto not_a_var
     .tailcall '!index_variable'(var, nargout, nargin, parens, args)
 
-    # if it's not a variable, treat it like a sub and look that up.
+    # if it's not a pre-existing variable, see if we have a function
   not_a_var:
     sub_obj = '!lookup_function'(name)
-    unless null sub_obj goto found_sub
-    _error_all("'", name, "' undefined")
-
-  found_sub:
+    if null sub_obj goto error_var_undefined
     .tailcall sub_obj(nargout, nargin, args :flat)
+   
+  error_var_undefined:
+    _error_all("'", name, "' undefined")
 .end
 
 =item !lookup_function(name)
@@ -68,6 +79,7 @@ found, null otherwise.
     if $I0 goto _dispatch_found_sub
 
     # Second, look for a locally-defined function
+    # TODO: Fix this to be "Matrixy";"functions" instead
     sub_obj = get_hll_global ["Matrixy::functions"], name
     $I0 = defined sub_obj
     if $I0 goto _dispatch_found_sub
@@ -125,6 +137,8 @@ the item, or with foo(...) to return another cell containing those items.
     .param int parens
     .param pmc args
 
+    # TODO: We don't handle slices yet.
+
     # Figure out which type it is, to determine where to go
     $S0 = typeof var
     if $S0 == 'Sub' goto have_func_handle
@@ -138,10 +152,14 @@ the item, or with foo(...) to return another cell containing those items.
     # For Subs, if we have parens execute it. Otherwise it's an error. If we
     # want a sub reference, need to use the @ operator
   have_func_handle:
-    if parens == 0 goto error_bad_func_call
+    if parens == 0 goto assign_func_handle
     if parens == 2 goto error_func_not_cell
     .tailcall var(nargout, nargin, args :flat)
+  assign_func_handle:
+    .return(var)
 
+    # For cell arrays the indexing is different depending on which brackets
+    # we use.
   have_cell_array:
     if parens == 1 goto index_cell_as_cell
     if parens == 2 goto index_cell_as_matrix
@@ -155,6 +173,7 @@ the item, or with foo(...) to return another cell containing those items.
     $P1[0;0] = $P0
     .return($P1)
 
+    # Matrices can be indexed by () but not {}.
   have_matrix_type:
     if parens == 1 goto index_matrix_as_matrix
     if parens == 2 goto error_matrix_not_cell
@@ -164,8 +183,6 @@ the item, or with foo(...) to return another cell containing those items.
 
   error_index_scalar:
     _error_all("Cannot index a scalar")
-  error_bad_func_call:
-    _error_all("Sub cannot be used like a variable")
   error_func_not_cell:
     _error_all("Cannot index function with {}")
   error_matrix_not_cell:
@@ -175,6 +192,7 @@ the item, or with foo(...) to return another cell containing those items.
 .sub '!scalar_indexing'
     .param pmc var
     .param pmc args
+    
     # If we only have a 1-ary index, we need to use a separate vector indexing
     # algorithm instead of the nested matrix indexing.
     $I0 = args
@@ -241,14 +259,15 @@ Returns the modified variable.
 
     if null var goto autovivify_cell
     $S0 = typeof var
-    if $S0 != "PMCMatrix2D" goto not_a_cell
+    if $S0 != "PMCMatrix2D" goto error_not_a_cell
     .tailcall '!indexed_assign'(var, value, indices :flat)
 
-  not_a_cell:
-    _error_all("cell indexing on a non-cell")
   autovivify_cell:
     var = new ['PMCMatrix2D']
     .tailcall '!indexed_assign'(var, value, indices :flat)
+   
+  error_not_a_cell:
+    _error_all("Cannot use {} indexing on a ", $S0)
 .end
 
 .sub '!indexed_assign'
