@@ -6,5 +6,5 @@ is(columns(x), 2, "cell(n) is square, columns");
 is(rows(x), 2, "cell(n) is square, rows");
 
 y = cell(3, 4);
-is(columns(y), 3, "cell(n, m) is rectangle, columns");
-is(rows(y), 4, "cell(n, m) is rectangle, rows");
+is(rows(y), 3, "cell(n, m) is rectangle, columns");
+is(columns(y), 4, "cell(n, m) is rectangle, rows");
