@@ -88,9 +88,12 @@ method terminator($/) {
 
 method stmt_with_value($/, $key) {
     our $?TERMINATOR;
+    our @DISPLAYVALUES;
+
     if $key eq "open" {
         our $NUMLVALUES;
         $NUMLVALUES := 0;
+        @DISPLAYVALUES := _new_empty_array();
     }
     else {
         if $?TERMINATOR == 1 {
@@ -106,14 +109,27 @@ method stmt_with_value($/, $key) {
             )
         }
         elsif $key eq "assignment" {
-            my $assignment := $( $<assignment> );
-            my $past := PAST::Stmts.new( :node($/),
-                PAST::Op.new( :pasttype('inline'), :node($/),
-                    :inline("    '!print_result_a'(%0, %1)"),
-                    PAST::Val.new( :value( $assignment.name() ), :returns('String')),
-                    $assignment
-                )
+            my $past := PAST::Stmts.new(
+                :node($/),
+                $( $<assignment> )
             );
+            for @DISPLAYVALUES {
+                $past.push(
+                    PAST::Op.new(
+                        :pasttype('inline'),
+                        :node($/),
+                        :inline("    '!print_result_a'(%0, %1)"),
+                        PAST::Val.new(
+                            :value($_),
+                            :returns('String')
+                        ),
+                        PAST::Var.new(
+                            :name($_),
+                            :scope('package')
+                        )
+                    )
+                );
+            }
             make $past;
         }
     }
@@ -271,7 +287,7 @@ Here is what we want things to look like:
 
   x(...) = c
   x = '!indexed_assign'(x, c, ...)
- 
+
   [a(...), b(...)] = c
   $P1 = c[0]
   a = '!indexed_assign'(a, $P1, ...)
@@ -284,11 +300,11 @@ method assignment($/, $key) {
     our $?BLOCK;
     our %?GLOBALS;
     our $NUMLVALUES;   # number of values in current assignment
-    our $ASSIGNVALUE; # value or array of values to assign
-    our $ARRAYASSIGN; # Whether we are in array or scalar mode
-    our $?LVALUECELL; # lvalue is being indexed with {}
+    our $ASSIGNVALUE;  # value or array of values to assign
+    our $ARRAYASSIGN;  # Whether we are in array or scalar mode
+    our $?LVALUECELL;  # lvalue is being indexed with {}
     our @?LVALUEPARAMS;
-    
+
     if $key eq "open" {
         @?LVALUEPARAMS := _new_empty_array();
         $NUMLVALUES := 1;
@@ -326,13 +342,14 @@ method assignment($/, $key) {
 }
 
 method lvalue($/) {
-    our $NUMLVALUES;     # number of values in current assignment
+    our $NUMLVALUES;    # number of values in current assignment
     our $ASSIGNVALUE;   # value or array of values to assign
     our $ARRAYASSIGN;   # Whether we are in array or scalar mode
     our $?LVALUECELL;   # Whether the lvalue is indexed with {}
     our %?GLOBALS;      # list of variables explicitly described as global
     our @?LVALUEPARAMS; # the indices on the lvalue
-   
+    our @DISPLAYVALUES; # values to print if the trailing ; is omitted
+
     my $indexer := '!indexed_assign';
     if $?LVALUECELL {
         $indexer := '!indexed_assign_cell';
@@ -347,11 +364,12 @@ method lvalue($/) {
     }
     # ... = '!indexed_assign'(var, value, idx, array?, ...)
     my $idx := _integer_copy($NUMLVALUES);
-    $idx--;    
+    $idx--;
     my $idxnode := PAST::Val.new(
         :value($idx),
         :returns('Integer')
     );
+    @DISPLAYVALUES.push($name);
     my $rhs := PAST::Op.new(
         :pasttype('call'),
         :name($indexer),
@@ -375,8 +393,8 @@ method lvalue($/) {
         :node($/)
     );
 }
-    
-    
+
+
 
 method lvalue_postfix_index($/, $key) {
     our @?LVALUEPARAMS;
@@ -583,7 +601,7 @@ method func_sig($/) {
                 )
             );
             _disp_all("done with varargout");
-        }           
+        }
     }
 
     ## set this block as the current block, and store it on the scope stack
@@ -652,7 +670,7 @@ method sub_or_var($/, $key) {
     our @?BLOCK;
     our %?GLOBALS;
     our $NUMLVALUES;
-    
+
     my $invocant := $( $<primary> );
     my $name := $invocant.name();
     my $parens := 0;
@@ -666,7 +684,7 @@ method sub_or_var($/, $key) {
         # TODO: "Matrixy";"globals"
         $invocant.namespace("Matrixy::globals");
     }
-    
+
     my $nargin := 0;
     my $nargout := 0;
     if _is_defined($NUMLVALUES) {
