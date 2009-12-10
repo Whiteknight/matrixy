@@ -69,7 +69,7 @@ and build Parrot from source:
     perl Configure.pl
     make && make test && make install-dev
 
-NOTE: Must be Parrot 1.6.0 or higher. This requirement is subject to change.
+NOTE: Must be Parrot 1.8.0 or higher. This requirement is subject to change.
 
 =head3 Parrot-Linear-Algebra
 
@@ -81,21 +81,20 @@ parrot-linear-algebra can be obtained from:
 
 L<http://github.com/Whiteknight/parrot-linear-algebra
 
-The F<Configure.nqp> step of the build process will fail with an error message
-if the parrot-linear-algebra package is not properly installed and available
-on your system.
+The build process will fail with an error message if the parrot-linear-algebra
+package is not properly installed and available on your system.
 
 =head2 BUILDING
 
 Once all dependencies are in place, you can build Matrixy using this sequence of
 commands:
 
-    parrot-nqp Configure.nqp
-    make test
+    parrot setup.pir
+    parrot setup.pir test
+    parrot setup.pir install
 
-Notice that Parrot must be properly installed on your system and the C<parrot-nqp>
-binary must be located in your PATH. On your system, you may need to replace "make"
-with another variant such as "gmake", "nmake", or "mingw32-make".
+Notice that Parrot must be properly installed on your system for this to work.
+To install, you may need to run the last command with elevated privileges.
 
 =head2 CONTACT
 
