@@ -73,6 +73,9 @@ object.
     $P0 = box 0
     set_hll_global ['Matrixy';'Grammar';'Actions'], '$?MATRIXSQUARE', $P0
 
+    $P0 = box 0
+    set_hll_global ['Matrixy';'Grammar';'Actions'], '$?LVALUECELL', $P0
+
     # list of functions that we've compiled. We cache them to prevent needing
     # to recompile.
     # TODO: This isn't part of the parser, find a better namespace to hold this
@@ -132,7 +135,7 @@ to the Matrixy compiler.
     # TODO: We might want to add this sequence as a method on the compiler
     #       object, so we can call it from a library load too.
     # load start up file
-    
+
     errorsoff .PARROT_ERRORS_PARAM_COUNT_FLAG
     errorsoff .PARROT_ERRORS_RESULT_COUNT_FLAG
     $P0 = null

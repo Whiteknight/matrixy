@@ -1,4 +1,4 @@
-disp("1..10");
+disp("1..8");
 
 % Basic function call with no args
 function bar
@@ -63,20 +63,3 @@ else
     printf("not ok 6\n");
 endif
 
-% Test nargin and varargin
-function argsintest(varargin)
-    printf("ok %d\n", nargin + 6);
-endfunction
-argsintest(5);
-argsintest(6, 7);
-argsintest(8, 9, 10);
-
-% Test nargout
-function x = argsouttest()
-    if nargout == 1
-        printf("ok 10\n");
-    else
-        printf("not ok 10 # TODO need to implement nargout\n");
-    endif
-endfunction
-a = argsouttest();

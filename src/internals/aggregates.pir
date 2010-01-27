@@ -11,6 +11,11 @@
     .return(ary)
 .end
 
+.sub '!cell'
+    $P0 = new ['PMCMatrix2D']
+    .return($P0)
+.end
+
 .sub '!matrix_from_rows'
     .param pmc ary :slurpy
     .local pmc lengths
@@ -78,6 +83,7 @@
     row = shift myiter
     $I1 = row
     if $I1 != length goto lengths_not_equal
+    inc $I0
     goto loop_top
   loop_bottom:
   new_empty_cell:
@@ -230,6 +236,23 @@
 # used in the parser
 .sub '_new_empty_array'
     $P0 = new ['ResizablePMCArray']
+    .return($P0)
+.end
+
+.sub '_is_defined'
+    .param pmc item
+    if null item goto not_defined
+    $S0 = typeof item
+    if $S0 == "Undef" goto not_defined
+    .return(1)
+  not_defined:
+    .return(0)
+.end
+
+.sub '_integer_copy'
+    .param int i
+    $P0 = new 'Integer'
+    $P0 = i
     .return($P0)
 .end
 

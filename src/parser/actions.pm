@@ -88,28 +88,50 @@ method terminator($/) {
 
 method stmt_with_value($/, $key) {
     our $?TERMINATOR;
-    if $?TERMINATOR == 1 {
-        make PAST::Op.new(:pasttype('inline'), :node($/),
-            :inline("    '!store_last_ans'(%0)"),
-            $( $/{$key} )
-        );
+    our @DISPLAYVALUES;
+
+    if $key eq "open" {
+        our $NUMLVALUES;
+        $NUMLVALUES := 0;
+        @DISPLAYVALUES := _new_empty_array();
     }
-    elsif $key eq "expression" {
-        make PAST::Op.new(:pasttype('inline'), :node($/),
-            :inline("    '!print_result_e'(%0)"),
-            $( $<expression> )
-        )
-    }
-    elsif $key eq "assignment" {
-        my $assignment := $( $<assignment> );
-        my $past := PAST::Stmts.new( :node($/),
-            PAST::Op.new( :pasttype('inline'), :node($/),
-                :inline("    '!print_result_a'(%0, %1)"),
-                PAST::Val.new( :value( $assignment.name() ), :returns('String')),
-                $assignment
+    else {
+        if $?TERMINATOR == 1 {
+            make PAST::Op.new(:pasttype('inline'), :node($/),
+                :inline("    '!store_last_ans'(%0)"),
+                $( $/{$key} )
+            );
+        }
+        elsif $key eq "expression" {
+            make PAST::Op.new(:pasttype('inline'), :node($/),
+                :inline("    '!print_result_e'(%0)"),
+                $( $<expression> )
             )
-        );
-        make $past;
+        }
+        elsif $key eq "assignment" {
+            my $past := PAST::Stmts.new(
+                :node($/),
+                $( $<assignment> )
+            );
+            for @DISPLAYVALUES {
+                $past.push(
+                    PAST::Op.new(
+                        :pasttype('inline'),
+                        :node($/),
+                        :inline("    '!print_result_a'(%0, %1)"),
+                        PAST::Val.new(
+                            :value($_),
+                            :returns('String')
+                        ),
+                        PAST::Var.new(
+                            :name($_),
+                            :scope('package')
+                        )
+                    )
+                );
+            }
+            make $past;
+        }
     }
 }
 
@@ -259,59 +281,136 @@ method do_block($/) {
     make $( $<block> );
 }
 
-# We're turning this:
-#     x(a, b) = c
-# into this:
-#     x = '!indexed_assign'(x, c, a, b)
-# We have to do this because of the way that indices are managed in M, and how
-# matrices can be indexed like vectors.
+=begin
+
+Here is what we want things to look like:
+
+  x(...) = c
+  x = '!indexed_assign'(x, c, ...)
+
+  [a(...), b(...)] = c
+  $P1 = c[0]
+  a = '!indexed_assign'(a, $P1, ...)
+  $P2 = c[1]
+  b = '!indexed_assign'(b, $P2, ...)
+
+=cut
+
 method assignment($/, $key) {
     our $?BLOCK;
     our %?GLOBALS;
-    our @?PARAMS;
+    our $NUMLVALUES;   # number of values in current assignment
+    our $ASSIGNVALUE;  # value or array of values to assign
+    our $ARRAYASSIGN;  # Whether we are in array or scalar mode
+    our $?LVALUECELL;  # lvalue is being indexed with {}
+    our @?LVALUEPARAMS;
+
     if $key eq "open" {
-        @?PARAMS := _new_empty_array();
+        @?LVALUEPARAMS := _new_empty_array();
+        $NUMLVALUES := 1;
+        $ASSIGNVALUE := PAST::Var.new(
+            :name("__tmp_assign_helper")
+        );
+        $ARRAYASSIGN := PAST::Val.new(
+            :value(0),
+            :returns('Integer')
+        );
+    }
+    elsif $key eq "lvalues" {
+        $NUMLVALUES--;
     }
     else {
-        my $rhs := $( $<expression> );
-        my $lhs := $( $<variable> );
-        $lhs.lvalue(1);
-        my $name := $lhs.name();
-        if %?GLOBALS{$name} {
-            $lhs.namespace("Matrixy::globals");
+        if +($<lvalue>) > 1 {
+            $ARRAYASSIGN.value(1);
         }
-        $rhs := PAST::Op.new(
-            :pasttype('call'),
-            :name('!indexed_assign'),
-            PAST::Var.new(
-                :name($lhs.name()),
-                :scope('package')
-            ),
-            $rhs
+        # $ASSIGNVALUE = <expression>
+        my $region := PAST::Stmts.new(
+            PAST::Op.new(
+                :pasttype('bind'),
+                :node($/),
+                $ASSIGNVALUE,
+                $($<expression>)
+            )
         );
-        for @?PARAMS {
-            $rhs.push($_);
+        # Now push all the items that read from $ASSIGNVALUE
+        for $<lvalue> {
+            $region.push( $($_) );
         }
-        make PAST::Op.new(
-            $lhs,
-            $rhs,
-            :pasttype('bind'),
-            :name( $lhs.name() ),
-            :node($/)
-        );
+        $NUMLVALUES := 0;
+        make $region;
     }
 }
 
+method lvalue($/) {
+    our $NUMLVALUES;    # number of values in current assignment
+    our $ASSIGNVALUE;   # value or array of values to assign
+    our $ARRAYASSIGN;   # Whether we are in array or scalar mode
+    our $?LVALUECELL;   # Whether the lvalue is indexed with {}
+    our %?GLOBALS;      # list of variables explicitly described as global
+    our @?LVALUEPARAMS; # the indices on the lvalue
+    our @DISPLAYVALUES; # values to print if the trailing ; is omitted
+
+    my $indexer := '!indexed_assign';
+    if $?LVALUECELL {
+        $indexer := '!indexed_assign_cell';
+        $?LVALUECELL := 0;
+    }
+    my $lhs := $( $<variable> );
+    $lhs.lvalue(1);
+    my $name := $lhs.name();
+    if %?GLOBALS{$name} {
+        # TODO: Make sure we want "Matrixy::globals", not ["Matrixy","globals"]
+        $lhs.namespace("Matrixy::globals");
+    }
+    # ... = '!indexed_assign'(var, value, idx, array?, ...)
+    my $idx := _integer_copy($NUMLVALUES);
+    $idx--;
+    my $idxnode := PAST::Val.new(
+        :value($idx),
+        :returns('Integer')
+    );
+    @DISPLAYVALUES.push($name);
+    my $rhs := PAST::Op.new(
+        :pasttype('call'),
+        :name($indexer),
+        PAST::Var.new(
+            :name($name),
+            :scope('package')
+        ),
+        $ASSIGNVALUE,
+        $idxnode,
+        $ARRAYASSIGN
+    );
+    for @?LVALUEPARAMS {
+        $rhs.push($_);
+    }
+    $NUMLVALUES++;
+    make PAST::Op.new(
+        $lhs,
+        $rhs,
+        :pasttype('bind'),
+        :name( $name ),
+        :node($/)
+    );
+}
+
+
+
 method lvalue_postfix_index($/, $key) {
-    our @?PARAMS;
-    if $key eq "expressions" {
+    our @?LVALUEPARAMS;
+    our $?LVALUECELL;
+    if $key eq "cellexpression" {
+        $?LVALUECELL := 1;
+    }
+    if $key eq "expressions" || $key eq "cellexpression" {
         for $<expression> {
-            @?PARAMS.push($($_));
+            @?LVALUEPARAMS.push($($_));
         }
     }
     else {
+        # TODO: This isn't right for structures
         my $name := $( $<identifier> ).name();
-        @?PARAMS.push(
+        @?LVALUEPARAMS.push(
             PAST::Val.new(
                 :value($name),
                 :returns('String')
@@ -354,8 +453,7 @@ method variable_declaration($/) {
 method func_def($/) {
     our @?BLOCK;
     our $?BLOCK;
-
-    our @RETID;
+    our @FUNCRETURNS;
 
     my $past := $( $<func_sig> );
 
@@ -364,14 +462,18 @@ method func_def($/) {
     }
 
     # add a return statement if needed
-    # TODO: Support multiple returns
-    if @RETID {
-        my $var := PAST::Var.new(
-            :name(@RETID[0].name())
+    if @FUNCRETURNS {
+        my $retop := PAST::Op.new(
+            :pasttype('return')
         );
-        my $retop := PAST::Op.new( $var, :pasttype('return') );
+        for @FUNCRETURNS {
+            $retop.push(
+                PAST::Var.new(
+                    :name($_.name())
+                )
+            )
+        }
         $past.push($retop);
-        @RETID.shift();
     }
 
     # remove the block from the scope stack
@@ -386,14 +488,15 @@ method func_def($/) {
 method func_sig($/) {
     our $?BLOCK;
     our @?BLOCK;
-    our @RETID;
+    our @FUNCRETURNS;
 
+    @FUNCRETURNS := _new_empty_array();
     my $name := $( $<identifier>[0] );
     $<identifier>.shift();
 
     my $past := PAST::Block.new(
         :blocktype('declaration'),
-        :namespace('Matrixy::functions'),
+        :namespace('Matrixy', 'functions'),
         :node($/),
         :name($name.name()),
         PAST::Var.new(
@@ -447,12 +550,58 @@ method func_sig($/) {
     }
 
     if $<return_identifier> {
-        my $param := $( $<return_identifier>[0] );
-        $param.scope('lexical');
-        $param.isdecl(1);
-        $past.push($param);
-        $past.symbol($param.name(), :scope('lexical'));
-        @RETID[0] := $param;
+        my $hasvarargout := 0;
+        for $<return_identifier> {
+            if $hasvarargout == 1 {
+                _error_all("varargout must be the last return value")
+            }
+            my $param := $( $_ );
+            if $param.name() eq "varargout" {
+                _disp_all("has varargout");
+                $hasvarargout := 1;
+            }
+            else {
+                _disp_all("a normal parameter ", $param.name());
+                $param.scope('lexical');
+                $param.isdecl(1);
+                $past.symbol($param.name(), :scope('lexical'));
+                $past.push($param);
+                @FUNCRETURNS.push($param);
+            }
+        }
+        if $hasvarargout == 1 {
+            # if we have the varargout return identifier, autovivify it into
+            # a cell
+            _disp_all("setting up varargout");
+            $past.push(
+                PAST::Op.new(
+                    :pasttype('bind'),
+                    :node($/),
+                    PAST::Var.new(
+                        :name("varargout"),
+                        :scope("lexical"),
+                        :isdecl(1),
+                        :node($/)
+                    ),
+                    PAST::Op.new(
+                        :pasttype('call'),
+                        :name('!cell'),
+                        :node($/)
+                    )
+                )
+            );
+            _disp_all("setting scope");
+            $past.symbol("varargout", :scope("lexical"));
+            _disp_all("adding retvalue");
+            @FUNCRETURNS.push(
+                PAST::Var.new(
+                    :name("varargout"),
+                    :scope("lexical"),
+                    :node($/)
+                )
+            );
+            _disp_all("done with varargout");
+        }
     }
 
     ## set this block as the current block, and store it on the scope stack
@@ -520,27 +669,44 @@ method anon_func_constructor($/) {
 method sub_or_var($/, $key) {
     our @?BLOCK;
     our %?GLOBALS;
+    our $NUMLVALUES;
+
     my $invocant := $( $<primary> );
     my $name := $invocant.name();
+    my $parens := 0;
+
+    if $key eq "args" {
+        $parens := 1;
+    } elsif $key eq "cellargs" {
+        $parens := 2;
+    }
     if %?GLOBALS{$name} {
+        # TODO: "Matrixy";"globals"
         $invocant.namespace("Matrixy::globals");
     }
+
     my $nargin := 0;
     my $nargout := 0;
+    if _is_defined($NUMLVALUES) {
+        $nargout := $NUMLVALUES;
+    }
+
     my $past := PAST::Op.new(
         :name('!dispatch'),
         :pasttype('call'),
         :node($/)
     );
+
     if $<expression> {
         for $<expression> {
             $past.push($($_));
             $nargin++;
         }
     }
+
     $past.unshift(
         PAST::Val.new(
-            :value($key eq "args"),
+            :value($parens),
             :returns('Integer')
         )
     );
@@ -577,15 +743,6 @@ method bare_words($/) {
 
 method primary($/) {
     my $past := $( $<identifier> );
-    for $<postfix_expression> {
-        my $expr := $( $_ );
-        ## set the current $past as the first child of $expr;
-        ## $expr is either a key or an index; both are "keyed"
-        ## variable access, where the first child is assumed
-        ## to be the aggregate.
-        $expr.unshift($past);
-        $past := $expr;
-    }
     make $past;
 }
 
@@ -595,68 +752,6 @@ method primary($/) {
 method variable($/) {
     our $?BLOCK;
     my $past := $( $<identifier> );
-    my $name := $past.name();
-    for $<postfix_expression> {
-        my $expr := $( $_ );
-        $expr.unshift($past);
-        $past := $expr;
-    }
-    make $past;
-}
-
-method postfix_expression($/, $key) {
-    make $( $/{$key} );
-}
-
-method key($/) {
-    my $key := $( $<expression> );
-
-    make PAST::Var.new(
-        $key,
-        :scope('keyed'),
-        :vivibase('Hash'),
-        :viviself('Undef'),
-        :node($/)
-    );
-}
-
-method member($/) {
-    my $member := $( $<identifier> );
-    ## x.y is syntactic sugar for x{"y"}, so stringify the identifier:
-    my $key := PAST::Val.new(
-        :returns('String'),
-        :value($member.name()),
-        :node($/)
-    );
-
-    ## the rest of this method is the same as method key() above.
-    make PAST::Var.new(
-        $key,
-        :scope('keyed'),
-        :vivibase('Hash'),
-        :viviself('Undef'),
-        :node($/)
-    );
-}
-
-method index($/) {
-    my $index := $( $<expression> );
-
-    make PAST::Var.new(
-        $index,
-        :scope('keyed'),
-        :vivibase('ResizablePMCArray'),
-        :viviself('Undef'),
-        :node($/)
-    );
-}
-
-method named_field($/) {
-    my $past := $( $<expression> );
-    my $name := $( $<string_constant> );
-    ## the passed expression is in fact a named argument,
-    ## use the named() accessor to set that name.
-    $past.named($name);
     make $past;
 }
 
@@ -724,21 +819,6 @@ method subexpression($/, $key) {
     make $( $/{$key} );
 }
 
-method hash_constructor($/) {
-    ## use the parrot calling conventions to
-    ## create a hash, using the "anonymous" sub
-    ## !hash (which is not a valid Squaak name)
-    my $past := PAST::Op.new(
-        :name('!hash'),
-        :pasttype('call'),
-        :node($/)
-    );
-    for $<named_field> {
-        $past.push($($_));
-    }
-    make $past;
-}
-
 method term($/, $key) {
     make $( $/{$key} );
 }
@@ -799,7 +879,7 @@ method expression($/, $key) {
         else {
             $past.pasttype('call');
             $past.push(
-                PAST::Var.new( 
+                PAST::Var.new(
                     :name(~$<type>),
                     :namespace("_Matrixy","builtins")
                 )
