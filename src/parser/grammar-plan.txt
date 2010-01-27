@@ -1,0 +1,47 @@
+rule statement {
+    | <matrix_literal> = <accessor>
+    # _matrix_literal = !build_matrix_literal(elements)
+    # _nargsout = _matrix_literal.'get_nargs'()
+    # _accessor = !build_accessor(args)
+    # _result = _accessor.'get_result'(_nargsout)
+    # _matrix_literal.'assign_result'(_result)
+
+    | <accessor> = <accessor>
+    # _accessor1 = !build_accessor(args1)
+    # _nargsout = _accessor1.'get_nargs'() # always == 1
+    # _accessor2 = !build_accessor(args2)
+    # _result = _accessor.'get_result'(_nargsout)
+    # _accessor.'assign_result'(_result)
+
+    | <accessor> = <matrix_literal>
+    # _accessor = !build_access(args)
+    # _nargsout = accessor.'get_nargs'() # always == 1
+    # _matrix_literal = !build_matrix_literal(elements)
+    # _result = _matrix_literal.'get_result'(_nargsout)
+    # _accessor.'assign_result'(_result)
+
+    | <matrix_literal>
+    # _ans = !get_ans()
+    # _nargsout = _ans.'get_nargs'() # always 1
+    # _matrix_literal = !build_matrix_literal(elements)
+    # _result = _matrix_literal.'get_result'(_nargsout)
+    # _ans.'assign_result'(_result)
+
+    | <accessor>
+    # _ans = !get_ans()
+    # _nargsout = _ans.'get_nargs'()
+    # _matrix_literal = !build_matrix_literal(elements)
+    # _result = _matrix_literal.'get_result'(_nargsout)
+    # _ans.'assign_result'(_result)
+}
+
+rule accessor {
+    | <name> '(' <args> ')'
+    | <name>
+}
+_accessor = !build_accessor(args)
+
+rule matrix_literal {
+    '[' <elements> ']'
+}
+_matrix_literal = !build_matrix_literal(elements)
