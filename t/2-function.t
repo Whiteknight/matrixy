@@ -1,4 +1,4 @@
-disp("1..8");
+disp("1..6");
 
 % Basic function call with no args
 function bar
