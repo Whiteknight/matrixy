@@ -15,7 +15,7 @@ do secret system stuff.
 
 .namespace []
 
-.sub '_system'
+.sub '!_system'
     .param pmc args :slurpy
 
     $P0 = get_hll_global ["_Matrixy";"builtins"], 'system'

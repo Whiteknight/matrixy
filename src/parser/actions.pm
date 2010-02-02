@@ -48,10 +48,7 @@ method TOP($/, $key) {
                     :pasttype('inline'),
                     :inline(
                         "    .get_results(%r)\n" ~
-                        "    .local string __matrixy_msg\n" ~
-                        "    __matrixy_msg = %r['message']\n" ~
-                        "    print 'error: '\n" ~
-                        "    say __matrixy_msg\n"
+                        "    '!_final_exception_handler'(%r)\n"
                     )
                 )
             )
@@ -156,7 +153,7 @@ method control_statement($/, $key) {
 
 method system_call($/) {
     make PAST::Op.new(
-        :name("_system"),
+        :name("!_system"),
         :pasttype('call'),
         :node($/),
         PAST::Val.new(
@@ -557,11 +554,11 @@ method func_sig($/) {
             }
             my $param := $( $_ );
             if $param.name() eq "varargout" {
-                _disp_all("has varargout");
+                #_disp_all("has varargout");
                 $hasvarargout := 1;
             }
             else {
-                _disp_all("a normal parameter ", $param.name());
+                #_disp_all("a normal parameter ", $param.name());
                 $param.scope('lexical');
                 $param.isdecl(1);
                 $past.symbol($param.name(), :scope('lexical'));
