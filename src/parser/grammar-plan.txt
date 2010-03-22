@@ -35,6 +35,14 @@ rule statement {
     # _result = _matrix_literal.'get_result'(_nargsout)
     # _accessor.'assign_result'(_result)
 
+    | <accessor> = <expression>
+    # foo = 1 + 2
+    # foo(x) = 1 + 2
+    # --------------------------------------------------
+    # _accessor = !build_accessor(args)
+    # _value = <expression>
+    # _accessor.'assign_result'(_value)
+
     | <matrix_literal>
     # [a, b, c]  <-- SAME AS ans = [a, b, c]
     # [1, 2, 3]  <-- SAME AS ans = [1, 2, 3]
@@ -55,11 +63,13 @@ rule statement {
     # _matrix_literal = !build_matrix_literal(elements)
     # _result = _matrix_literal.'get_result'(_nargsout)
     # _ans.'assign_result'(_result)
+
+
 }
 # Steps in performing an assignment
-# 1) Build the left-hand accessor object
-# 2) Get nargout from left-hand accesor
-# 3) Build the right-hand accessor object
+# 1) Build the left-hand accessor object. Doesn't need to know which side it is.
+# 2) Build the right-hand accessor object
+# 3) Get nargout from left-hand accessor
 # 4) Call right-hand accessor with nargout. Produce result object
 # 5) Unpack result object into left-hand accessor object
 

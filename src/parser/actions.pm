@@ -294,48 +294,54 @@ Here is what we want things to look like:
 =cut
 
 method assignment($/, $key) {
-    our $?BLOCK;
-    our %?GLOBALS;
-    our $NUMLVALUES;   # number of values in current assignment
-    our $ASSIGNVALUE;  # value or array of values to assign
-    our $ARRAYASSIGN;  # Whether we are in array or scalar mode
-    our $?LVALUECELL;  # lvalue is being indexed with {}
-    our @?LVALUEPARAMS;
-
-    if $key eq "open" {
-        @?LVALUEPARAMS := _new_empty_array();
-        $NUMLVALUES := 1;
-        $ASSIGNVALUE := PAST::Var.new(
-            :name("__tmp_assign_helper")
-        );
-        $ARRAYASSIGN := PAST::Val.new(
-            :value(0),
-            :returns('Integer')
-        );
+    my $first;
+    my $second;
+    if $key eq "form1" || $key eq "form2" {
+        $first := $<matrix_literal>;
+    } else {
+        $first := $<accessor>;
     }
-    elsif $key eq "lvalues" {
-        $NUMLVALUES--;
+    if $key eq "form2" || $key eq "form6" {
+        $second := $first;
+        # TODO: Create a PAST node to assign the result to "ans"
+    }
+    else if $key eq "form1" || $key eq "form3" {
+        $second := $<accessor>;
+    }
+    else if $key eq "form4" {
+        $second := $<matrix_literal>;
     }
     else {
-        if +($<lvalue>) > 1 {
-            $ARRAYASSIGN.value(1);
-        }
-        # $ASSIGNVALUE = <expression>
-        my $region := PAST::Stmts.new(
-            PAST::Op.new(
-                :pasttype('bind'),
-                :node($/),
-                $ASSIGNVALUE,
-                $($<expression>)
-            )
-        );
-        # Now push all the items that read from $ASSIGNVALUE
-        for $<lvalue> {
-            $region.push( $($_) );
-        }
-        $NUMLVALUES := 0;
-        make $region;
+        $second := $<expression>;
     }
+
+=begin
+
+    The <accessor>, <matrix_literal> and <expression> subrules are going to create
+    an accessor object, which will be made available through $first and $second,
+    above.
+
+    _nargsout = $first.'get_nargs'()
+    _result = $second.'get_result'(_nargsout)
+    $first.'assign_result'(_result)
+
+=cut
+
+    make PAST::Op.new(
+        :pasttype("call"),
+        :name("assign_result"),
+        $first,
+        PAST::Op.new(
+            :pasttype("call"),
+            :name("get_result"),
+            $second,
+            PAST::Op.new(
+                :pasttype("call"),
+                :name("get_nargs"),
+                $first
+            )
+        )
+    );
 }
 
 method lvalue($/) {

@@ -44,7 +44,6 @@ rule statement {
 
 # Statement types that would display a value if not terminated with an ';'
 rule stmt_with_value {
-    {*}                                     #= open
       <expression> <terminator> {*}          #= expression
     | <assignment> <terminator> {*}          #= assignment
 }
@@ -69,23 +68,27 @@ token sys_bare_words {
 }
 
 rule assignment {
-    {*}   #= open
-    [
-              <lvalue> [',' <lvalue>]*
-        | '[' <lvalue> [',' <lvalue>]* ']'
-    ]
-    {*}   #= lvalues
-    '=' <expression>
-    {*}   #= close
+      <matrix_literal> '=' <accessor>    #= form1
+    | <matrix_literal>                   #= form2
+    | <accessor> '=' <accessor>          #= form3
+    | <accessor> '=' <matrix_literal>    #= form4
+    | <accessor> '=' <expression>        #= form5
+    | <accessor>                         #= form6
 }
 
-rule lvalue {
-    <variable> <lvalue_postfix_index>*
+rule accessor {
+    <primary> <lvalue_postfix_index>?
+}
+
+# An ambiguous primary element, could be a subroutine call or a variable
+# reference, depending on context
+rule primary {
+    <identifier>
     {*}
 }
 
 rule lvalue_postfix_index {
-    | '.' <identifier> {*}                           #= identifier
+      '.' <identifier> {*}                           #= identifier
     | '(' <expression> [ ',' <expression> ]* ')' {*} #= expressions
     | '{' <expression> [ ',' <expression> ]* '}' {*} #= cellexpression
 }
@@ -96,38 +99,11 @@ rule lvalue_postfix_index {
 # TODO: A bare identifier should be treated as a function call UNLESS it's
 #       a previously-defined variable in the current scope. At the moment, we
 #       do not do this.
-rule sub_or_var {
-    | <primary>
-      '(' [ <expression> [',' <expression>]* ]? ')'
-      {*}                                            #= args
-    | <primary>
-      '{' [ <expression> [',' <expression>]* ]? '}'
-      {*}                                            #= cellargs
-    #| <primary> <bare_words> {*}
-    | <primary> {*}                                  #= noargs
-}
-
-# TODO: This should match everything upto but not including a terminator token
-token bare_words {
-    \N* {*}
-}
 
 # TODO: Do this right! Add allow a comma-separated list and an autovivification
 #       option
 rule global_statement {
     'global' <identifier> {*}
-}
-
-# An ambiguous primary element, could be a subroutine call or a variable
-# reference, depending on context
-rule primary {
-    <identifier>
-    {*}
-}
-
-# An unambiguous variable reference, based on context
-rule variable {
-    <identifier> {*}
 }
 
 # This rule is used in places like ranges where using <expression> would cause
@@ -154,6 +130,7 @@ rule term {
    | '(' <expression> ')' {*}        #= expression
 }
 
+# TODO: Turn this into an operator
 rule function_handle {
     '@' <identifier> {*}
 }
