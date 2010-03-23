@@ -98,6 +98,7 @@ rule statement {
 # 3) Get nargout from left-hand accessor
 # 4) Call right-hand accessor with nargout. Produce result object
 # 5) Unpack result object into left-hand accessor object
+# 6) Get the variable value from the left-hand accessor and store_lex it.
 
 rule accessor {
     <primary> <postfix_indexer>?
@@ -130,6 +131,10 @@ rule matrix_literal {
        containing those values. Takes a number of nargout arguments expected.
     c) assign_result(result r). Called when the accessor is an LVALUE. Unpacks
        the result object into the accessor.
+    d) set_indexer(indexer i). Associate an indexer object with this accessor.
+    e) get_value(). When used as an LVALUE, get_value will return the final,
+       autovivified and assigned variable value. This value will be used with
+       set_lex to store the value of the variable.
 2) A results object. Results objects are used to serialize output values from
    a function call or matrix lookup. A result object is passed to the LVALUE
    accessor object for unpacking. Results have the following methods:
@@ -144,5 +149,10 @@ rule matrix_literal {
     a) add_keys(pmc keys :slurpy). Build the indexer with the list of ordered
        arguments.
     b) get_arglist(). Return a flattenable array of arguments, in order
-    c) get_nargs(). return a count of items in the indexer.
-
+    c) get_nargs(). Return a count of items in the indexer.
+    d) set_type(str type). Set the type of the indexer. Indexers are either
+       matrix-like (with parens) or cell-like (with {}). Future indexers may
+       also be property-like (with a .).
+    e) get_type(). Return the type of the indexer.
+4) A workspace object. A workspace is essentially a hash of variable names and
+   values. This is a long-term plan.
