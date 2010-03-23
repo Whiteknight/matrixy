@@ -328,15 +328,15 @@ method assignment($/, $key) {
 =cut
 
     make PAST::Op.new(
-        :pasttype("call"),
+        :pasttype("callmethod"),
         :name("assign_result"),
         $first,
         PAST::Op.new(
-            :pasttype("call"),
+            :pasttype("callmethod"),
             :name("get_result"),
             $second,
             PAST::Op.new(
-                :pasttype("call"),
+                :pasttype("callmethod"),
                 :name("get_nargs"),
                 $first
             )
@@ -344,62 +344,7 @@ method assignment($/, $key) {
     );
 }
 
-method lvalue($/) {
-    our $NUMLVALUES;    # number of values in current assignment
-    our $ASSIGNVALUE;   # value or array of values to assign
-    our $ARRAYASSIGN;   # Whether we are in array or scalar mode
-    our $?LVALUECELL;   # Whether the lvalue is indexed with {}
-    our %?GLOBALS;      # list of variables explicitly described as global
-    our @?LVALUEPARAMS; # the indices on the lvalue
-    our @DISPLAYVALUES; # values to print if the trailing ; is omitted
-
-    my $indexer := '!indexed_assign';
-    if $?LVALUECELL {
-        $indexer := '!indexed_assign_cell';
-        $?LVALUECELL := 0;
-    }
-    my $lhs := $( $<variable> );
-    $lhs.lvalue(1);
-    my $name := $lhs.name();
-    if %?GLOBALS{$name} {
-        # TODO: Make sure we want "Matrixy::globals", not ["Matrixy","globals"]
-        $lhs.namespace("Matrixy::globals");
-    }
-    # ... = '!indexed_assign'(var, value, idx, array?, ...)
-    my $idx := _integer_copy($NUMLVALUES);
-    $idx--;
-    my $idxnode := PAST::Val.new(
-        :value($idx),
-        :returns('Integer')
-    );
-    @DISPLAYVALUES.push($name);
-    my $rhs := PAST::Op.new(
-        :pasttype('call'),
-        :name($indexer),
-        PAST::Var.new(
-            :name($name),
-            :scope('package')
-        ),
-        $ASSIGNVALUE,
-        $idxnode,
-        $ARRAYASSIGN
-    );
-    for @?LVALUEPARAMS {
-        $rhs.push($_);
-    }
-    $NUMLVALUES++;
-    make PAST::Op.new(
-        $lhs,
-        $rhs,
-        :pasttype('bind'),
-        :name( $name ),
-        :node($/)
-    );
-}
-
-
-
-method lvalue_postfix_index($/, $key) {
+method postfix_indexer($/, $key) {
     our @?LVALUEPARAMS;
     our $?LVALUECELL;
     if $key eq "cellexpression" {

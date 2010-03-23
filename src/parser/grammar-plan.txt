@@ -22,6 +22,12 @@ rule statement {
     # _accessor2 = !build_accessor(args2)
     # _result = _accessor.'get_result'(_nargsout)
     # _accessor.'assign_result'(_result)
+    #
+    # OR:
+    #
+    # _accessor1 = !build_accessor(args1)
+    # _accessor2 = !build_accessor(args2)
+    # !dispatch_accessors(_accessor1, _accessor2)
 
     | <accessor> = <matrix_literal>
     # foo(x) = [a, b, c]
@@ -64,22 +70,79 @@ rule statement {
     # _result = _matrix_literal.'get_result'(_nargsout)
     # _ans.'assign_result'(_result)
 
+    | <cell_literal>
+    # _ans = !get_ans()
+    # _nargsout = _ans.'get_nargs'()
+    # _cell_literal = !build_cell_literal(elements)
+    # _result = _cell_literal.'get_result'(_nargsout)
+    # _ans.'assign_result'(_result)
 
+    | <cell_literal> = <accessor>
+    # _cell_literal = !build_cell_literal(elements)
+    # _nargsout = _cell_literal.'get_nargs'()
+    # _accessor = !build_accessor(args)
+    # _result = _accessor.'get_result'(_nargsout)
+    # _cell_literal.'assign_result'(_result)
+
+    | <accessor> = <cell_literal>
+    # _accessor = !build_accessor(args)
+    # _nargsout = accessor.'get_nargs'() # always == 1
+    # _cell_literal = !build_cell_literal(elements)
+    # _result = _cell_literal.'get_result'(_nargsout)
+    # _accessor.'assign_result'(_result)
 }
+
 # Steps in performing an assignment
 # 1) Build the left-hand accessor object. Doesn't need to know which side it is.
-# 2) Build the right-hand accessor object
+# 2) Build the right-hand accessor object. Doesn't need to know which side it is.
 # 3) Get nargout from left-hand accessor
 # 4) Call right-hand accessor with nargout. Produce result object
 # 5) Unpack result object into left-hand accessor object
 
 rule accessor {
-    | <name> '(' <args> ')'
-    | <name>
+    <primary> <postfix_indexer>?
+    #_accessor = !build_accessor(primary, postfix_indexer)
 }
-#_accessor = !build_accessor(args)
+
+rule postfix_indexer {
+    | '(' <expression> [ ',' <expression> ]* ')'
+    # _indexer = !build_matrix_indexer(expressions)
+
+    | '{' <expression> [ ',' <expression> ]* '}'
+    # _indexer = !build_cell_indexer(expressions)
+}
 
 rule matrix_literal {
     '[' <elements> ']'
+    # _matrix_literal = !build_matrix_literal(elements)
 }
-_matrix_literal = !build_matrix_literal(elements)
+
+##### CLASSES NEEDED #####
+
+1) An accessor object. Accessors are used to read data from and write data to
+   complex aggregates. Accessors will be  Accessors have the following methods:
+    a) get_nargs(). When used as an LVALUE, returns the number of expected
+       arguments. For a matrix literal, this will be the number of items in the
+       assignment. For an indexer (function or matrix index), this will be 1.
+       For ans, this will be 1.
+    b) get_result(int nargout). Called when the accessor is an RVALUE. This performs
+       the function call or matrix/cell lookup and returns a result object
+       containing those values. Takes a number of nargout arguments expected.
+    c) assign_result(result r). Called when the accessor is an LVALUE. Unpacks
+       the result object into the accessor.
+2) A results object. Results objects are used to serialize output values from
+   a function call or matrix lookup. A result object is passed to the LVALUE
+   accessor object for unpacking. Results have the following methods:
+    a) set_nargout(nargout). Sets the number of output arguments expected.
+    b) set_values(pmc values :slurpy). Set the result values into the object.
+       Args added above the nargout number are ignored.
+    c) add_value(pmc value). add a single value to the end of the list.
+       Args added above the nargout number are ignored.
+3) An indexer object. An indexer is used to key into a matrix or cell literal,
+   or act like a list of parameters into a function. Indexers have these
+   methods:
+    a) add_keys(pmc keys :slurpy). Build the indexer with the list of ordered
+       arguments.
+    b) get_arglist(). Return a flattenable array of arguments, in order
+    c) get_nargs(). return a count of items in the indexer.
+

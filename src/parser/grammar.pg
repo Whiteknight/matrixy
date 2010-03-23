@@ -77,7 +77,7 @@ rule assignment {
 }
 
 rule accessor {
-    <primary> <lvalue_postfix_index>?
+    <primary> <postfix_indexer>?
 }
 
 # An ambiguous primary element, could be a subroutine call or a variable
@@ -87,7 +87,7 @@ rule primary {
     {*}
 }
 
-rule lvalue_postfix_index {
+rule postfix_indexer {
       '.' <identifier> {*}                           #= identifier
     | '(' <expression> [ ',' <expression> ]* ')' {*} #= expressions
     | '{' <expression> [ ',' <expression> ]* '}' {*} #= cellexpression
