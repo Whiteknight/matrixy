@@ -135,6 +135,9 @@ rule matrix_literal {
     e) get_value(). When used as an LVALUE, get_value will return the final,
        autovivified and assigned variable value. This value will be used with
        set_lex to store the value of the variable.
+    f) set_primary(string name, pmc p). Set the name of the primary, and the
+       the current value. If a function, p will be the Sub PMC and name will be
+       it's name. If a matrix, p will be the matrix itself.
 2) A results object. Results objects are used to serialize output values from
    a function call or matrix lookup. A result object is passed to the LVALUE
    accessor object for unpacking. Results have the following methods:
