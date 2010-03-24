@@ -142,10 +142,12 @@ rule matrix_literal {
    a function call or matrix lookup. A result object is passed to the LVALUE
    accessor object for unpacking. Results have the following methods:
     a) set_nargout(nargout). Sets the number of output arguments expected.
-    b) set_values(pmc values :slurpy). Set the result values into the object.
+    b) get_nargout(). Returns the number of args in the result
+    c) set_values(pmc values :slurpy). Set the result values into the object.
        Args added above the nargout number are ignored.
-    c) add_value(pmc value). add a single value to the end of the list.
+    d) add_value(pmc value). add a single value to the end of the list.
        Args added above the nargout number are ignored.
+    e) get_values(). Return an iterable list of values
 3) An indexer object. An indexer is used to key into a matrix or cell literal,
    or act like a list of parameters into a function. Indexers have these
    methods:
