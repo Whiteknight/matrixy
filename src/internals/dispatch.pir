@@ -36,83 +36,6 @@ the name of the variable and it's current value. Some rules:
 
 =cut
 
-.sub '!dispatch'
-    .param string name
-    .param pmc var
-    .param int nargout
-    .param int nargin
-    .param int parens
-    .param pmc args :slurpy
-    .local pmc sub_obj
-    .local pmc var_obj
-
-    # if we have a variable value, dispatch that
-    if null var goto not_a_var
-    .tailcall '!index_variable'(var, nargout, nargin, parens, args)
-
-    # if it's not a pre-existing variable, see if we have a function
-  not_a_var:
-    sub_obj = '!lookup_function'(name)
-    if null sub_obj goto error_var_undefined
-    .tailcall sub_obj(nargout, nargin, args :flat)
-   
-  error_var_undefined:
-    _error_all("'", name, "' undefined")
-.end
-
-=item !lookup_function(name)
-
-Searches for a function of the given name. The function could be a builtin
-PIR function or a function written in M. Returns a Sub PMC object if one is
-found, null otherwise.
-
-=cut
-
-.sub '!lookup_function'
-    .param string name
-    .local pmc sub_obj
-    .local pmc var_obj
-
-    # First, look for a builtin function.
-    sub_obj = get_hll_global ["_Matrixy";"builtins"], name
-    $I0 = defined sub_obj
-    if $I0 goto _dispatch_found_sub
-
-    # Second, look for a locally-defined function
-    # TODO: Fix this to be "Matrixy";"functions" instead
-    sub_obj = get_hll_global ["Matrixy";"functions"], name
-    $I0 = defined sub_obj
-    if $I0 goto _dispatch_found_sub
-
-    # Third, look for a list of already-loaded external functions
-    # TODO: This might not be necessary, since we are loading subs into their
-    #       own namespace now
-    .local pmc func_list
-    func_list = get_hll_global ['Matrixy';'Grammar';'Actions'], '%?FUNCTIONS'
-    sub_obj = func_list[name]
-    $I0 = defined sub_obj
-    if $I0 goto _dispatch_found_sub
-
-    # Fourth, search for the file "name".m in the /lib
-    .local pmc filehandle
-    filehandle = '!find_file_in_path'(name)
-    $I0 = defined filehandle
-    if $I0 goto _dispatch_found_file
-    goto _dispatch_not_found
-
-  _dispatch_found_file:
-    sub_obj = '!get_sub_from_code_file'(filehandle, name)
-    close filehandle
-    $I0 = defined sub_obj
-    if $I0 goto _dispatch_found_sub
-
-  _dispatch_not_found:
-    $P0 = null
-    .return($P0)
-
-  _dispatch_found_sub:
-    .return(sub_obj)
-.end
 
 =item !index_variable(var, nargout, nargin, parens)
 
@@ -129,109 +52,6 @@ the item, or with foo(...) to return another cell containing those items.
  foo{...}           parens == 2
 
 =cut
-
-.sub '!index_variable'
-    .param pmc var
-    .param int nargout
-    .param int nargin
-    .param int parens
-    .param pmc args
-
-    # TODO: We don't handle slices yet.
-
-    # Figure out which type it is, to determine where to go
-    $S0 = typeof var
-    if $S0 == 'Sub' goto have_func_handle
-    if $S0 == 'PMCMatrix2D' goto have_cell_array
-    $I0 = does var, "matrix"
-    if $I0 == 1 goto have_matrix_type
-    $I0 = args
-    if $I0 != 0 goto error_index_scalar
-    .return(var)
-
-    # For Subs, if we have parens execute it. Otherwise it's an error. If we
-    # want a sub reference, need to use the @ operator
-  have_func_handle:
-    if parens == 0 goto assign_func_handle
-    if parens == 2 goto error_func_not_cell
-    .tailcall var(nargout, nargin, args :flat)
-  assign_func_handle:
-    .return(var)
-
-    # For cell arrays the indexing is different depending on which brackets
-    # we use.
-  have_cell_array:
-    if parens == 1 goto index_cell_as_cell
-    if parens == 2 goto index_cell_as_matrix
-    .return(var)
-  index_cell_as_matrix:
-    .tailcall '!scalar_indexing'(var, args)
-  index_cell_as_cell:
-    # TODO: Do this right!
-    $P0 = '!scalar_indexing'(var, args)
-    $P1 = new ['PMCMatrix2D']
-    $P1[0;0] = $P0
-    .return($P1)
-
-    # Matrices can be indexed by () but not {}.
-  have_matrix_type:
-    if parens == 1 goto index_matrix_as_matrix
-    if parens == 2 goto error_matrix_not_cell
-    .return(var)
-  index_matrix_as_matrix:
-    .tailcall '!scalar_indexing'(var, args)
-
-  error_index_scalar:
-    _error_all("Cannot index a scalar")
-  error_func_not_cell:
-    _error_all("Cannot index function with {}")
-  error_matrix_not_cell:
-    _error_all("Cannot index matrix with {}")
-.end
-
-.sub '!scalar_indexing'
-    .param pmc var
-    .param pmc args
-    
-    # If we only have a 1-ary index, we need to use a separate vector indexing
-    # algorithm instead of the nested matrix indexing.
-    $I0 = args
-    if $I0 == 0 goto non_indexing
-    if $I0 == 1 goto vector_indexing
-    if $I0 == 2 goto matrix_indexing
-    _error_all("Only 0, 1, 2 indexes are currently supported")
-
-  non_indexing:
-    .return(var)
-  vector_indexing:
-    $I1 = args[0]
-    # Make sure it's 0-indexed
-    dec $I1
-    $P0 = var[$I1]
-    .return($P0)
-  matrix_indexing:
-    $I0 = args[0]
-    dec $I0
-    $I1 = args[1]
-    dec $I1
-    $P0 = var[$I0;$I1]
-    .return($P0)
-.end
-
-=item !is_scalar
-
-Returns 1 if the variable is a scalar type, 0 if it's a vector or matrix
-
-TODO: This is probably redundant and unneccessary. Remove this if not needed.
-
-=cut
-
-.sub '!is_scalar'
-    .param pmc var
-    $I0 = does var, "matrix"
-    $I1 = not $I0
-    .return($I1)
-.end
 
 =item !indexed_assign
 
@@ -265,7 +85,7 @@ Returns the modified variable.
   autovivify_cell:
     var = new ['PMCMatrix2D']
     .tailcall '!indexed_assign'(var, value, indices :flat)
-   
+
   error_not_a_cell:
     _error_all("Cannot use {} indexing on a ", $S0)
 .end
@@ -412,47 +232,6 @@ PMC for that file. Notice that the file could be a script file or a function
 file.
 
 =cut
-
-# TODO: Script files take no arguments. An error message should be thrown if
-#       we try to pass arguments to one. Should we handle that here, or let
-#       Parrot's PCC system deal with it?
-.sub '!get_sub_from_code_file'
-    .param pmc filehandle
-    .param string name
-    .local pmc code
-    .local pmc func_list
-    .local pmc sub_obj
-    code = filehandle.'readall'()
-    $P0 = compreg "matrixy"
-    $P1 = $P0.'compile'(code)
-
-    # Get the number of subs in the codefile, and try to determine whether it's
-    # a script or a function file.
-    $I0 = elements $P1 # Need Parrot r37779 for this to work.
-    if $I0 == 1 goto script_file
-
-    # Here, we just assume it's a function-file. Take the first function.
-    # Other functions are private to that file and are ignored
-    sub_obj = $P1[1]
-    $S0 = sub_obj
-    if $S0 == name goto has_sub_obj
-    _disp_all("Warning: function name '", $S0, "' does not agree with file name ", name, ".m")
-    goto has_sub_obj
-
-  script_file:
-    sub_obj = $P1[0]
-
-  has_sub_obj:
-    func_list = get_hll_global ['Matrixy';'Grammar';'Actions'], '%?FUNCTIONS'
-    func_list[name] = sub_obj
-    .return(sub_obj)
-.end
-
-.sub '!unpack_return_array'
-    .param pmc args
-    .return(args :flat)
-.end
-
 
 .namespace []
 
