@@ -20,7 +20,8 @@
     $P1 = new ['PMCMatrix2D']
     ($P0 :slurpy) = obj.$S0(args :flat)
     if null $P0 goto just_return
-    $P1.'initialize_from_array'($P0)
+    $I0 = elements $P0
+    $P1.'initialize_from_array'(1, $I0, $P0)
   just_return:
     .return($P1)
 .end
